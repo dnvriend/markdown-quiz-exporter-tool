@@ -259,13 +259,18 @@ class QuizApp {
                 shuffleAnswers: false,
                 autoAdvance: false,
                 autoAdvanceDelay: 3,
+                timerEnabled: false,
+                timerMinutes: 90,
                 darkMode: this.detectDarkMode()
             },
             questions: this.prepareQuestions(),
             answers: {},
             checked: {},
             startTime: null,
-            endTime: null
+            endTime: null,
+            timerSeconds: null,
+            timerInterval: null,
+            timerPaused: false
         };
     }
 
@@ -372,8 +377,14 @@ class QuizApp {
     goToStatistics() {
         this.state.currentPage = 'statistics';
         this.state.endTime = Date.now();
+        this.stopTimer();
         this.saveState();
         this.render();
+    }
+
+    finishQuiz() {
+        // Called when time runs out - go to statistics
+        this.goToStatistics();
     }
 
     goToReview(index) {
@@ -405,8 +416,105 @@ class QuizApp {
         this.state.currentQuestionIndex = 0;
         this.state.answers = {};
         this.state.checked = {};
+
+        // Initialize timer if enabled
+        if (this.state.config.timerEnabled) {
+            this.state.timerSeconds = this.state.config.timerMinutes * 60;
+            this.state.timerPaused = false;
+            this.startTimer();
+        }
+
         this.saveState();
         this.render();
+    }
+
+    // Timer methods
+    startTimer() {
+        if (this.state.timerInterval) {
+            clearInterval(this.state.timerInterval);
+        }
+
+        this.state.timerInterval = setInterval(() => {
+            if (!this.state.timerPaused && this.state.timerSeconds > 0) {
+                this.state.timerSeconds--;
+                this.render();
+
+                if (this.state.timerSeconds === 0) {
+                    this.handleTimeUp();
+                }
+            }
+        }, 1000);
+    }
+
+    pauseTimer() {
+        this.state.timerPaused = true;
+        this.saveState();
+        this.render();
+    }
+
+    resumeTimer() {
+        this.state.timerPaused = false;
+        this.saveState();
+        this.render();
+    }
+
+    stopTimer() {
+        if (this.state.timerInterval) {
+            clearInterval(this.state.timerInterval);
+            this.state.timerInterval = null;
+        }
+    }
+
+    handleTimeUp() {
+        this.stopTimer();
+        this.state.timerPaused = true;
+
+        // Show modal
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        modal.innerHTML = `
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-md mx-4 shadow-2xl">
+                <div class="text-center">
+                    <div class="text-6xl mb-4">⏰</div>
+                    <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+                        Tijd is om!
+                    </h2>
+                    <p class="text-gray-600 dark:text-gray-300 mb-6">
+                        De tijd voor deze quiz is verstreken.
+                    </p>
+                    <button id="time-up-ok"
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg">
+                        OK
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        document.getElementById('time-up-ok').addEventListener('click', () => {
+            document.body.removeChild(modal);
+            this.finishQuiz();
+        });
+    }
+
+    formatTimerDisplay(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+
+        if (hours > 0) {
+            return `$${"{"}hours}:$${"{"}minutes.toString().padStart(2, '0')}:$${"{"}secs.toString().padStart(2, '0')}`;
+        } else {
+            return `$${"{"}minutes}:$${"{"}secs.toString().padStart(2, '0')}`;
+        }
+    }
+
+    getTimerColorClass() {
+        if (!this.state.config.timerEnabled) return '';
+        if (this.state.timerSeconds > 300) return 'text-gray-700 dark:text-gray-300';
+        if (this.state.timerSeconds > 60) return 'text-orange-600 dark:text-orange-400';
+        return 'text-red-600 dark:text-red-400 animate-pulse';
     }
 
     selectAnswer(questionIndex, answerIndex, isMultiple) {
@@ -574,6 +682,23 @@ class QuizApp {
                                 seconden)
                             </span>
                         </label>
+
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox"
+                                   id="timer-enabled"
+                                   ${this.state.config.timerEnabled ? 'checked' : ''}
+                                   class="w-5 h-5 text-blue-600 rounded">
+                            <span class="text-gray-700 dark:text-gray-300">
+                                Tijdslimiet instellen (
+                                <input type="number"
+                                       id="timer-minutes"
+                                       min="1"
+                                       max="300"
+                                       value="${this.state.config.timerMinutes}"
+                                       class="w-16 px-2 py-1 text-center border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                                minuten)
+                            </span>
+                        </label>
                     </div>
 
                     <button id="start-quiz"
@@ -663,19 +788,36 @@ class QuizApp {
             ? '<button id="prev-question" class="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-lg shadow hover:bg-gray-300 dark:hover:bg-gray-600">← Vorige</button>'
             : '';
 
+        // Timer display (if enabled)
+        const timerHtml = this.state.config.timerEnabled ? `
+            <div class="flex items-center gap-3">
+                <span class="text-lg font-mono font-bold ${this.getTimerColorClass()}">
+                    ⏱️ ${this.state.timerPaused ? 'GEPAUZEERD' : this.formatTimerDisplay(this.state.timerSeconds)}
+                </span>
+                <button id="timer-toggle"
+                        class="px-3 py-1 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded font-semibold">
+                    ${this.state.timerPaused ? '▶️ Hervatten' : '⏸️ Pauzeren'}
+                </button>
+                <span class="text-gray-400">│</span>
+            </div>
+        ` : '';
+
         return `
             <div>
                 <!-- Progress bar -->
                 <div class="mb-6">
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-sm text-gray-600 dark:text-gray-400">Voortgang</span>
-                        <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            Vraag ${index + 1} / ${this.state.questions.length}
-                        </span>
+                        <div class="flex items-center gap-2">
+                            $${"{"}timerHtml}
+                            <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                Vraag $${"{"}index + 1} / $${"{"}this.state.questions.length}
+                            </span>
+                        </div>
                     </div>
                     <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div class="progress-bar bg-blue-600 h-2 rounded-full"
-                             style="width: ${progress}%"></div>
+                             style="width: $${"{"}progress}%"></div>
                     </div>
                 </div>
 
@@ -920,7 +1062,21 @@ class QuizApp {
                 this.state.config.shuffleAnswers = document.getElementById('shuffle-answers').checked;
                 this.state.config.autoAdvance = document.getElementById('auto-advance').checked;
                 this.state.config.autoAdvanceDelay = parseInt(document.getElementById('auto-advance-delay').value);
+                this.state.config.timerEnabled = document.getElementById('timer-enabled').checked;
+                this.state.config.timerMinutes = parseInt(document.getElementById('timer-minutes').value);
                 this.startQuiz();
+            });
+        }
+
+        // Timer pause/resume toggle
+        const timerToggle = document.getElementById('timer-toggle');
+        if (timerToggle) {
+            timerToggle.addEventListener('click', () => {
+                if (this.state.timerPaused) {
+                    this.resumeTimer();
+                } else {
+                    this.pauseTimer();
+                }
             });
         }
 

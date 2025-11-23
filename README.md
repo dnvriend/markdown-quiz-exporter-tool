@@ -138,9 +138,10 @@ markdown-quiz-exporter-tool quiz-html quiz.md quiz.html --title "Quiz" -vv
 **Features:**
 - **Self-contained**: Single HTML file with embedded CSS and JavaScript
 - **Dark/Light Mode**: Automatic theme detection with manual toggle
+- **Countdown Timer**: Optional time limit with pause/resume functionality
 - **Shuffling**: Configurable question and answer randomization
-- **Progress Tracking**: Visual progress bar and timer
-- **Session Persistence**: Saves progress in browser storage
+- **Progress Tracking**: Visual progress bar
+- **Session Persistence**: Saves progress in browser storage (timer resets on refresh)
 - **Mobile Responsive**: Works on all screen sizes
 - **Markdown Support**: Renders markdown in explanations
 - **Multiple Question Types**: Supports both single and multiple choice
