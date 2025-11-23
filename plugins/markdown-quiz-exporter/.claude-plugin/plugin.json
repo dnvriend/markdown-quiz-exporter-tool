@@ -1,0 +1,9 @@
+{
+    "name": "markdown-quiz-exporter",
+    "description": "A CLI tool that exports the quiz-markdown-format to tools like Anki, Flashcard Hero",
+    "version": "0.1.0",
+    "author": {
+        "name": "Dennis Vriend",
+        "email": "dvriend@ilionx.com"
+    }
+}
