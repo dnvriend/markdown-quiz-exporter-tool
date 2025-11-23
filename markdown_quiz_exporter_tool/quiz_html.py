@@ -96,11 +96,6 @@ class QuizHTMLGenerator:
             transition: width 300ms ease-in-out;
         }
 
-        /* Hide elements */
-        .hidden {
-            display: none !important;
-        }
-
         /* Custom scrollbar for dark mode */
         ::-webkit-scrollbar {
             width: 10px;
@@ -134,14 +129,6 @@ class QuizHTMLGenerator:
             HTML body with app container and embedded scripts
         """
         return f"""<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
-    <!-- Theme toggle button (fixed position) -->
-    <button id="theme-toggle"
-            class="fixed top-4 right-4 z-50 p-3 rounded-lg bg-white dark:bg-gray-800 shadow-xl hover:shadow-2xl border-2 border-gray-200 dark:border-gray-600 text-3xl"
-            aria-label="Toggle dark mode">
-        <span id="sun-icon" class="hidden dark:block">☀️</span>
-        <span id="moon-icon" class="block dark:hidden">🌙</span>
-    </button>
-
     <!-- App container -->
     <div id="app" class="container mx-auto px-4 py-8 max-w-4xl"></div>
 
@@ -240,19 +227,13 @@ class QuizApp {
 
     // Initialize application
     init() {
-        // Set up theme toggle
-        document.getElementById('theme-toggle').addEventListener('click', () => this.toggleDarkMode());
-
-        // Apply saved dark mode preference
+        // Apply system dark mode preference on load
         if (this.state.config.darkMode) {
             document.documentElement.classList.add('dark');
         }
 
         // Render initial page
         this.render();
-
-        // Update theme icons after render (when DOM is ready)
-        this.updateThemeIcons();
     }
 
     // Initialize default state
@@ -348,37 +329,6 @@ class QuizApp {
             sessionStorage.removeItem('quizState');
         } catch (e) {
             console.error('Failed to clear state:', e);
-        }
-    }
-
-    // Toggle dark mode
-    toggleDarkMode() {
-        const html = document.documentElement;
-        const isDark = html.classList.contains('dark');
-
-        if (isDark) {
-            html.classList.remove('dark');
-        } else {
-            html.classList.add('dark');
-        }
-
-        this.state.config.darkMode = !isDark;
-        this.saveState();
-        this.updateThemeIcons();
-    }
-
-    // Update theme icons manually
-    updateThemeIcons() {
-        const isDark = document.documentElement.classList.contains('dark');
-        const sunIcon = document.getElementById('sun-icon');
-        const moonIcon = document.getElementById('moon-icon');
-
-        if (isDark) {
-            sunIcon.style.display = 'block';
-            moonIcon.style.display = 'none';
-        } else {
-            sunIcon.style.display = 'none';
-            moonIcon.style.display = 'block';
         }
     }
 
@@ -1195,7 +1145,7 @@ class QuizApp {
 }
 
 // Initialize the quiz application
-const app = new QuizApp(QUIZ_DATA);
+const quizApp = new QuizApp(QUIZ_DATA);
 """
 
 

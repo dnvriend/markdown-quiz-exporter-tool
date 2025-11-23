@@ -113,8 +113,8 @@ def test_dark_mode_support(tmp_path: Path, single_choice_question: Question) -> 
     # Check for dark mode classes
     assert "dark:bg-gray-900" in content
     assert "dark:bg-gray-800" in content
-    assert "toggleDarkMode" in content
-    assert "theme-toggle" in content
+    assert "darkMode: 'class'" in content  # Tailwind dark mode config
+    assert "detectDarkMode()" in content  # System preference detection
 
 
 def test_category_extraction(tmp_path: Path) -> None:
