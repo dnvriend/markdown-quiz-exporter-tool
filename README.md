@@ -34,6 +34,11 @@ A CLI tool that exports the quiz-markdown-format to tools like Anki, Flashcard H
 
 ## Features
 
+- ✅ **Validation**:
+  - Detailed error reporting with line numbers
+  - Context-aware error messages
+  - Quiz statistics (question types, answer counts)
+  - Explanation coverage analysis
 - 📤 **Export Formats**:
   - Interactive HTML quiz with dark/light mode
   - Flashcard Hero TSV format
@@ -91,7 +96,29 @@ markdown-quiz-exporter-tool --version
 
 ## Usage
 
-The tool provides three main export commands:
+### Validate Quiz File
+
+Before exporting, validate your quiz markdown file to check for errors:
+
+```bash
+# Basic validation
+markdown-quiz-exporter-tool validate quiz.md
+
+# With verbose debugging
+markdown-quiz-exporter-tool validate quiz.md -vv
+```
+
+**On Success**, shows statistics:
+- Total questions (single choice vs multiple choice)
+- Answer statistics
+- Explanation coverage
+
+**On Error**, shows:
+- Exact line number and problematic content
+- Context lines (2 before, 2 after)
+- Clear error message with fix suggestions
+
+The tool provides four main export commands:
 
 ### 1. Interactive HTML Quiz
 
@@ -192,14 +219,16 @@ For complete format specification, see `references/markdown-quiz-format.md`.
 ```bash
 # Show help
 markdown-quiz-exporter-tool --help
+markdown-quiz-exporter-tool validate --help
 markdown-quiz-exporter-tool quiz-html --help
 markdown-quiz-exporter-tool flashhero --help
 markdown-quiz-exporter-tool anki --help
 
 # Run with verbose output
-markdown-quiz-exporter-tool quiz-html quiz.md out.html --title "Quiz" -v    # INFO level
-markdown-quiz-exporter-tool flashhero quiz.md out.tsv -vv                  # DEBUG level
-markdown-quiz-exporter-tool anki quiz.md out.csv -vvv                      # TRACE level
+markdown-quiz-exporter-tool validate quiz.md -v                            # INFO level
+markdown-quiz-exporter-tool quiz-html quiz.md out.html --title "Quiz" -v  # INFO level
+markdown-quiz-exporter-tool flashhero quiz.md out.tsv -vv                 # DEBUG level
+markdown-quiz-exporter-tool anki quiz.md out.csv -vvv                     # TRACE level
 ```
 
 ## Multi-Level Verbosity Logging

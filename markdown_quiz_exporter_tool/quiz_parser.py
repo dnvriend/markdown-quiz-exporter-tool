@@ -30,10 +30,30 @@ class Question:
     question_type: str  # "single" or "multiple"
 
 
+@dataclass
+class ParseError:
+    """Detailed information about a parsing error."""
+
+    line_number: int
+    line_content: str
+    error_message: str
+    block_number: int
+    context_before: list[str]
+    context_after: list[str]
+
+
 class QuizParseError(Exception):
     """Exception raised when quiz parsing fails."""
 
-    pass
+    def __init__(self, message: str, parse_error: ParseError | None = None) -> None:
+        """Initialize with error message and optional detailed error info.
+
+        Args:
+            message: Error message
+            parse_error: Detailed parsing error information
+        """
+        super().__init__(message)
+        self.parse_error = parse_error
 
 
 class QuizParser:
@@ -53,6 +73,8 @@ class QuizParser:
         """
         self.file_path = file_path
         self.questions: list[Question] = []
+        self.all_lines: list[str] = []  # Store all lines for error reporting
+        self.line_offset: int = 0  # Track current line offset in file
 
     def parse(self) -> list[Question]:
         """Parse the quiz markdown file and extract questions.
@@ -68,31 +90,48 @@ class QuizParser:
             raise FileNotFoundError(f"Quiz file not found: {self.file_path}")
 
         content = self.file_path.read_text(encoding="utf-8")
+        self.all_lines = content.split("\n")
 
         # Split into question blocks
         blocks = content.split(self.QUESTION_SEPARATOR)
 
+        current_line = 0
         for i, block in enumerate(blocks):
+            # Track line offset for this block
+            self.line_offset = current_line
+
+            # Count lines in this block including separator
+            block_line_count = block.count("\n") + 1
+            if i < len(blocks) - 1:  # Add separator line except for last block
+                block_line_count += 1
+
             block = block.strip()
             if not block:
+                current_line += block_line_count
                 continue
 
             try:
-                question = self._parse_question_block(block)
+                question = self._parse_question_block(block, i + 1)
                 self.questions.append(question)
+            except QuizParseError:
+                raise
             except Exception as e:
+                # Create generic error without line info
                 raise QuizParseError(f"Error parsing question block {i + 1}: {e}") from e
+
+            current_line += block_line_count
 
         if not self.questions:
             raise QuizParseError("No questions found in the quiz file")
 
         return self.questions
 
-    def _parse_question_block(self, block: str) -> Question:
+    def _parse_question_block(self, block: str, block_number: int) -> Question:
         """Parse a single question block.
 
         Args:
             block: The text block containing one question
+            block_number: The question block number (1-indexed)
 
         Returns:
             Question object
@@ -114,7 +153,9 @@ class QuizParser:
                 question_text_lines.append(line.strip())
 
         if not question_text_lines:
-            raise QuizParseError("No question text found")
+            self._raise_parse_error(
+                0, lines[0] if lines else "", "No question text found", block_number, lines
+            )
 
         question_text = " ".join(question_text_lines)
 
@@ -139,7 +180,13 @@ class QuizParser:
                 if question_type is None:
                     question_type = "single"
                 elif question_type != "single":
-                    raise QuizParseError("Mixed answer types (single and multiple choice)")
+                    self._raise_parse_error(
+                        i,
+                        line,
+                        "Mixed answer types: Cannot mix ( ) and [ ] formats in same question",
+                        block_number,
+                        lines,
+                    )
 
                 is_correct = match.group(1).upper() == "X"
                 answer_text = match.group(2).strip()
@@ -152,7 +199,13 @@ class QuizParser:
                 if question_type is None:
                     question_type = "multiple"
                 elif question_type != "multiple":
-                    raise QuizParseError("Mixed answer types (single and multiple choice)")
+                    self._raise_parse_error(
+                        i,
+                        line,
+                        "Mixed answer types: Cannot mix ( ) and [ ] formats in same question",
+                        block_number,
+                        lines,
+                    )
 
                 is_correct = match.group(1).upper() == "X"
                 answer_text = match.group(2).strip()
@@ -160,10 +213,28 @@ class QuizParser:
                 continue
 
         if not answers:
-            raise QuizParseError("No answers found")
+            # Find first line after question
+            line_idx = answer_start_idx if answer_start_idx < len(lines) else 0
+            self._raise_parse_error(
+                line_idx,
+                lines[line_idx] if line_idx < len(lines) else "",
+                "No answers found. Expected format: '- (X) text' or '- [X] text'",
+                block_number,
+                lines,
+            )
 
         if not any(a.is_correct for a in answers):
-            raise QuizParseError("No correct answer marked")
+            # Find first answer line
+            for i in range(answer_start_idx, len(lines)):
+                if self._is_answer_line(lines[i]):
+                    self._raise_parse_error(
+                        i,
+                        lines[i],
+                        "No correct answer marked. Use (X) or [X] to mark correct answers",
+                        block_number,
+                        lines,
+                    )
+                    break
 
         # Extract reason section
         reason_lines = []
@@ -193,6 +264,51 @@ class QuizParser:
         return bool(
             self.SINGLE_CHOICE_PATTERN.match(line) or self.MULTIPLE_CHOICE_PATTERN.match(line)
         )
+
+    def _raise_parse_error(
+        self,
+        line_idx_in_block: int,
+        line_content: str,
+        error_message: str,
+        block_number: int,
+        block_lines: list[str],
+    ) -> None:
+        """Raise a QuizParseError with detailed line information.
+
+        Args:
+            line_idx_in_block: Line index within the block (0-indexed)
+            line_content: Content of the problematic line
+            error_message: Description of the error
+            block_number: Question block number (1-indexed)
+            block_lines: All lines in the current block
+
+        Raises:
+            QuizParseError: Always raised with detailed error info
+        """
+        # Calculate absolute line number in file
+        absolute_line = self.line_offset + line_idx_in_block + 1  # +1 for 1-indexed
+
+        # Get context lines (2 before, 2 after)
+        context_before = []
+        context_after = []
+
+        for i in range(max(0, line_idx_in_block - 2), line_idx_in_block):
+            if i < len(block_lines):
+                context_before.append(block_lines[i])
+
+        for i in range(line_idx_in_block + 1, min(len(block_lines), line_idx_in_block + 3)):
+            context_after.append(block_lines[i])
+
+        parse_error = ParseError(
+            line_number=absolute_line,
+            line_content=line_content,
+            error_message=error_message,
+            block_number=block_number,
+            context_before=context_before,
+            context_after=context_after,
+        )
+
+        raise QuizParseError(f"Error at line {absolute_line}: {error_message}", parse_error)
 
 
 def parse_quiz_file(file_path: Path) -> list[Question]:

@@ -406,11 +406,152 @@ def quiz_html(
         raise click.Abort()
 
 
+@click.command()
+@click.argument("input_file", type=click.Path(exists=True, path_type=Path))
+@click.option(
+    "-v",
+    "--verbose",
+    count=True,
+    help="Enable verbose output (use -v for INFO, -vv for DEBUG, -vvv for TRACE)",
+)
+def validate(input_file: Path, verbose: int) -> None:
+    """Validate quiz markdown file format and show statistics.
+
+    Checks if the quiz markdown file follows the correct format and reports
+    any parsing errors with line numbers and context. If valid, shows statistics
+    about the quiz content.
+
+    \b
+    Arguments:
+        INPUT_FILE   Path to the quiz markdown file to validate (*.md)
+
+    \b
+    Examples:
+
+        \b
+        # Basic validation
+        markdown-quiz-exporter-tool validate quiz.md
+
+        \b
+        # With verbose output for detailed debugging
+        markdown-quiz-exporter-tool validate quiz.md -vv
+
+    \b
+    Output on success:
+        Shows question count, question types, answer statistics
+
+    \b
+    Output on error:
+        Shows exact line number, problematic content, and context
+    """
+    # Setup logging
+    setup_logging(verbose)
+
+    logger.info("Validating quiz file: %s", input_file)
+
+    # Try to parse the quiz file
+    try:
+        questions = parse_quiz_file(input_file)
+        logger.info("Successfully parsed %d questions", len(questions))
+
+        # Calculate statistics
+        total_questions = len(questions)
+        single_choice = sum(1 for q in questions if q.question_type == "single")
+        multiple_choice = sum(1 for q in questions if q.question_type == "multiple")
+
+        total_answers = sum(len(q.answers) for q in questions)
+        avg_answers = total_answers / total_questions if total_questions > 0 else 0
+
+        correct_answers = sum(sum(1 for a in q.answers if a.is_correct) for q in questions)
+
+        questions_with_reason = sum(1 for q in questions if q.reason)
+        questions_without_reason = total_questions - questions_with_reason
+
+        # Display success message
+        click.echo("✓ Quiz file is valid!")
+        click.echo()
+        click.echo("📊 Statistics:")
+        click.echo(f"  Total questions:        {total_questions}")
+        click.echo(f"  Single choice:          {single_choice}")
+        click.echo(f"  Multiple choice:        {multiple_choice}")
+        click.echo()
+        click.echo(f"  Total answer options:   {total_answers}")
+        click.echo(f"  Average per question:   {avg_answers:.1f}")
+        click.echo(f"  Correct answers:        {correct_answers}")
+        click.echo()
+        click.echo(f"  With explanation:       {questions_with_reason}")
+        click.echo(f"  Without explanation:    {questions_without_reason}")
+
+        logger.info("Validation successful")
+
+    except FileNotFoundError:
+        click.echo(f"✗ Error: Quiz file not found: {input_file}", err=True)
+        logger.error("File not found: %s", input_file)
+        raise click.Abort()
+
+    except QuizParseError as e:
+        click.echo("✗ Quiz file validation failed!", err=True)
+        click.echo()
+
+        # Show detailed error information if available
+        if e.parse_error:
+            err = e.parse_error
+            click.echo(f"Error in question block #{err.block_number}:")
+            click.echo(f"  Line {err.line_number}: {err.error_message}")
+            click.echo()
+
+            # Show context
+            if err.context_before:
+                click.echo("Context (before):")
+                for i, line in enumerate(err.context_before):
+                    line_num = err.line_number - len(err.context_before) + i
+                    click.echo(f"  {line_num:4d} │ {line}")
+
+            # Show problematic line with arrow
+            click.echo(f"  {err.line_number:4d} │ {err.line_content}")
+            click.echo(f"       │ {'─' * len(err.line_content)}^")
+            click.echo(f"       │ {err.error_message}")
+
+            if err.context_after:
+                click.echo()
+                click.echo("Context (after):")
+                for i, line in enumerate(err.context_after):
+                    line_num = err.line_number + i + 1
+                    click.echo(f"  {line_num:4d} │ {line}")
+
+            logger.error(
+                "Parse error at line %d in block %d: %s",
+                err.line_number,
+                err.block_number,
+                err.error_message,
+            )
+        else:
+            # Generic error without line info
+            click.echo(f"  {str(e)}")
+            logger.error("Parse error: %s", str(e))
+
+        click.echo()
+        click.echo("💡 Tips:")
+        click.echo("  - Check that questions are separated by '---'")
+        click.echo("  - Single choice answers use: - (X) or - ( )")
+        click.echo("  - Multiple choice answers use: - [X] or - [ ]")
+        click.echo("  - Add explanation with: # reason")
+        click.echo("  - Run with -vv for more detailed logging")
+
+        raise click.Abort()
+
+    except Exception as e:
+        click.echo(f"✗ Unexpected error: {e}", err=True)
+        logger.debug("Unexpected error details", exc_info=True)
+        raise click.Abort()
+
+
 # Add subcommands
 main.add_command(completion_command)
 main.add_command(flashhero)
 main.add_command(anki)
 main.add_command(quiz_html)
+main.add_command(validate)
 
 
 if __name__ == "__main__":
