@@ -66,6 +66,13 @@ class QuizHTMLGenerator:
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{escaped_title}</title>
+    <script>
+        tailwind = {{
+            config: {{
+                darkMode: 'class'
+            }}
+        }};
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
     {self._build_styles()}
@@ -129,14 +136,10 @@ class QuizHTMLGenerator:
         return f"""<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
     <!-- Theme toggle button (fixed position) -->
     <button id="theme-toggle"
-            class="fixed top-4 right-4 z-50 p-3 rounded-lg bg-white dark:bg-gray-800 shadow-xl hover:shadow-2xl border-2 border-gray-200 dark:border-gray-600"
+            class="fixed top-4 right-4 z-50 p-3 rounded-lg bg-white dark:bg-gray-800 shadow-xl hover:shadow-2xl border-2 border-gray-200 dark:border-gray-600 text-3xl"
             aria-label="Toggle dark mode">
-        <svg id="sun-icon" class="w-7 h-7 text-yellow-500 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-        <svg id="moon-icon" class="w-7 h-7 text-indigo-600 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-        </svg>
+        <span id="sun-icon" class="hidden dark:block">☀️</span>
+        <span id="moon-icon" class="block dark:hidden">🌙</span>
     </button>
 
     <!-- App container -->
@@ -247,6 +250,9 @@ class QuizApp {
 
         // Render initial page
         this.render();
+
+        // Update theme icons after render (when DOM is ready)
+        this.updateThemeIcons();
     }
 
     // Initialize default state
@@ -358,6 +364,22 @@ class QuizApp {
 
         this.state.config.darkMode = !isDark;
         this.saveState();
+        this.updateThemeIcons();
+    }
+
+    // Update theme icons manually
+    updateThemeIcons() {
+        const isDark = document.documentElement.classList.contains('dark');
+        const sunIcon = document.getElementById('sun-icon');
+        const moonIcon = document.getElementById('moon-icon');
+
+        if (isDark) {
+            sunIcon.style.display = 'block';
+            moonIcon.style.display = 'none';
+        } else {
+            sunIcon.style.display = 'none';
+            moonIcon.style.display = 'block';
+        }
     }
 
     // Navigation
@@ -504,9 +526,9 @@ class QuizApp {
         const secs = seconds % 60;
 
         if (hours > 0) {
-            return `$${"{"}hours}:$${"{"}minutes.toString().padStart(2, '0')}:$${"{"}secs.toString().padStart(2, '0')}`;
+            return hours + ':' + minutes.toString().padStart(2, '0') + ':' + secs.toString().padStart(2, '0');
         } else {
-            return `$${"{"}minutes}:$${"{"}secs.toString().padStart(2, '0')}`;
+            return minutes + ':' + secs.toString().padStart(2, '0');
         }
     }
 
@@ -809,15 +831,15 @@ class QuizApp {
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-sm text-gray-600 dark:text-gray-400">Voortgang</span>
                         <div class="flex items-center gap-2">
-                            $${"{"}timerHtml}
+                            ` + timerHtml + `
                             <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                Vraag $${"{"}index + 1} / $${"{"}this.state.questions.length}
+                                Vraag ` + (index + 1) + ` / ` + this.state.questions.length + `
                             </span>
                         </div>
                     </div>
                     <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div class="progress-bar bg-blue-600 h-2 rounded-full"
-                             style="width: $${"{"}progress}%"></div>
+                             style="width: ` + progress + `%"></div>
                     </div>
                 </div>
 

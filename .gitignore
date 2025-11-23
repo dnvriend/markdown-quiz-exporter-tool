@@ -49,3 +49,6 @@ dmypy.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Test files
+quiz1.md
