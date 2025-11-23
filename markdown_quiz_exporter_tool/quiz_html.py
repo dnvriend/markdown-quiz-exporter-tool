@@ -409,13 +409,22 @@ class QuizApp {
         this.state.timerInterval = setInterval(() => {
             if (!this.state.timerPaused && this.state.timerSeconds > 0) {
                 this.state.timerSeconds--;
-                this.render();
+                this.updateTimerDisplay();
 
                 if (this.state.timerSeconds === 0) {
                     this.handleTimeUp();
                 }
             }
         }, 1000);
+    }
+
+    updateTimerDisplay() {
+        // Update only the timer display without re-rendering the entire page
+        const timerDisplay = document.getElementById('timer-display');
+        if (timerDisplay) {
+            timerDisplay.textContent = '⏱️ ' + (this.state.timerPaused ? 'GEPAUZEERD' : this.formatTimerDisplay(this.state.timerSeconds));
+            timerDisplay.className = 'text-lg font-mono font-bold ' + this.getTimerColorClass();
+        }
     }
 
     pauseTimer() {
@@ -763,7 +772,7 @@ class QuizApp {
         // Timer display (if enabled)
         const timerHtml = this.state.config.timerEnabled ? `
             <div class="flex items-center gap-3">
-                <span class="text-lg font-mono font-bold ${this.getTimerColorClass()}">
+                <span id="timer-display" class="text-lg font-mono font-bold ${this.getTimerColorClass()}">
                     ⏱️ ${this.state.timerPaused ? 'GEPAUZEERD' : this.formatTimerDisplay(this.state.timerSeconds)}
                 </span>
                 <button id="timer-toggle"
