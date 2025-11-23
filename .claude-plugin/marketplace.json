@@ -1,19 +1,15 @@
 {
-    "name": "markdown-quiz-exporter",
+    "name": "markdown-quiz-exporter-tool",
     "owner": {
         "name": "Dennis Vriend",
-        "email": "dvriend@ilionx.com",
-        "url": "https://github.com/dnvriend"
-    },
-    "metadata": {
-        "description": "Marketplace for markdown-quiz-exporter CLI plugin - A CLI tool that exports the quiz-markdown-format to tools like Anki, Flashcard Hero",
-        "version": "0.1.0"
+        "email": "dnvriend@gmail.com",
+        "url": "https://github.com/dnvriend/markdown-quiz-exporter-tool"
     },
     "plugins": [
         {
-            "name": "markdown-quiz-exporter",
-            "source": "./plugins/markdown-quiz-exporter",
-            "description": "A CLI tool that exports the quiz-markdown-format to tools like Anki, Flashcard Hero"
+            "name": "markdown-quiz-exporter-tool",
+            "source": "./plugins/markdown-quiz-exporter-tool",
+            "description": "Export quiz markdown to Anki, Flashcard Hero, and HTML"
         }
     ]
 }

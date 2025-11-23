@@ -14,13 +14,13 @@ format: ## Format code with ruff
 	uv run ruff format .
 
 typecheck: ## Run type checking with mypy
-	uv run mypy markdown_quiz_exporter
+	uv run mypy markdown_quiz_exporter_tool
 
 test: ## Run tests
 	uv run pytest tests/
 
 security-bandit: ## Run bandit security linter
-	uv run bandit -r markdown_quiz_exporter -c pyproject.toml
+	uv run bandit -r markdown_quiz_exporter_tool -c pyproject.toml
 
 security-pip-audit: ## Run pip-audit for dependency vulnerabilities
 	uv run pip-audit
@@ -40,8 +40,8 @@ clean: ## Remove build artifacts and cache
 	find . -type d -name __pycache__ -exec rm -rf {} +
 	find . -type f -name '*.pyc' -delete
 
-run: ## Run markdown-quiz-exporter (usage: make run ARGS="...")
-	uv run markdown-quiz-exporter $(ARGS)
+run: ## Run markdown-quiz-exporter-tool (usage: make run ARGS="...")
+	uv run markdown-quiz-exporter-tool $(ARGS)
 
 build: ## Build package
 	uv build
@@ -50,4 +50,4 @@ install-global: ## Install globally with uv tool
 	uv tool install . --reinstall
 
 uninstall-global: ## Uninstall global installation
-	uv tool uninstall markdown-quiz-exporter
+	uv tool uninstall markdown-quiz-exporter-tool

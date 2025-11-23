@@ -1,5 +1,5 @@
 [project]
-name = "markdown-quiz-exporter"
+name = "markdown-quiz-exporter-tool"
 version = "0.1.0"
 description = "A CLI tool that exports the quiz-markdown-format to tools like Anki, Flashcard Hero"
 requires-python = ">=3.14"
@@ -13,7 +13,7 @@ license = {text = "MIT"}
 readme = "README.md"
 
 [project.scripts]
-markdown-quiz-exporter = "markdown_quiz_exporter.cli:main"
+markdown-quiz-exporter-tool = "markdown_quiz_exporter_tool.cli:main"
 
 [build-system]
 requires = ["hatchling"]

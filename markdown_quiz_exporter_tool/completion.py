@@ -1,4 +1,4 @@
-"""Completion command for markdown-quiz-exporter.
+"""Completion command for markdown-quiz-exporter-tool.
 
 Note: This code was generated with assistance from AI coding tools
 and has been reviewed and tested by a human.
@@ -19,33 +19,35 @@ def completion_command(shell: str) -> None:
 
     \b
     # Bash (add to ~/.bashrc):
-    eval "$(markdown-quiz-exporter completion bash)"
+    eval "$(markdown-quiz-exporter-tool completion bash)"
 
     \b
     # Zsh (add to ~/.zshrc):
-    eval "$(markdown-quiz-exporter completion zsh)"
+    eval "$(markdown-quiz-exporter-tool completion zsh)"
 
     \b
-    # Fish (add to ~/.config/fish/completions/markdown-quiz-exporter.fish):
-    markdown-quiz-exporter completion fish > ~/.config/fish/completions/markdown-quiz-exporter.fish
+    # Fish (add to ~/.config/fish/completions/markdown-quiz-exporter-tool.fish):
+    markdown-quiz-exporter-tool completion fish > \\
+        ~/.config/fish/completions/markdown-quiz-exporter-tool.fish
 
     \b
     File-based Installation (Recommended for better performance):
 
     \b
     # Bash
-    markdown-quiz-exporter completion bash > ~/.markdown-quiz-exporter-complete.bash
-    echo 'source ~/.markdown-quiz-exporter-complete.bash' >> ~/.bashrc
+    markdown-quiz-exporter-tool completion bash > ~/.markdown-quiz-exporter-tool-complete.bash
+    echo 'source ~/.markdown-quiz-exporter-tool-complete.bash' >> ~/.bashrc
 
     \b
     # Zsh
-    markdown-quiz-exporter completion zsh > ~/.markdown-quiz-exporter-complete.zsh
-    echo 'source ~/.markdown-quiz-exporter-complete.zsh' >> ~/.zshrc
+    markdown-quiz-exporter-tool completion zsh > ~/.markdown-quiz-exporter-tool-complete.zsh
+    echo 'source ~/.markdown-quiz-exporter-tool-complete.zsh' >> ~/.zshrc
 
     \b
     # Fish (automatic loading)
     mkdir -p ~/.config/fish/completions
-    markdown-quiz-exporter completion fish > ~/.config/fish/completions/markdown-quiz-exporter.fish
+    markdown-quiz-exporter-tool completion fish > \\
+        ~/.config/fish/completions/markdown-quiz-exporter-tool.fish
 
     \b
     Supported Shells:
@@ -70,7 +72,7 @@ def completion_command(shell: str) -> None:
         completer = completion_class(
             cli=ctx.find_root().command,
             ctx_args={},
-            prog_name="markdown-quiz-exporter",
+            prog_name="markdown-quiz-exporter-tool",
             complete_var="_MARKDOWN_QUIZ_EXPORTER_COMPLETE",
         )
         click.echo(completer.source())

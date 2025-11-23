@@ -1,4 +1,8 @@
-# markdown-quiz-exporter
+<div align="center">
+  <img src=".github/assets/logo-small.png" alt="markdown-quiz-exporter-tool logo" width="200"/>
+
+  # markdown-quiz-exporter-tool
+</div>
 
 [![Python Version](https://img.shields.io/badge/python-3.14+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -26,10 +30,23 @@ A CLI tool that exports the quiz-markdown-format to tools like Anki, Flashcard H
 
 ## About
 
-`markdown-quiz-exporter` is a Python CLI tool built with modern tooling and best practices.
+`markdown-quiz-exporter-tool` is a Python CLI tool built with modern tooling and best practices.
 
 ## Features
 
+- 📤 **Export Formats**:
+  - Interactive HTML quiz with dark/light mode
+  - Flashcard Hero TSV format
+  - Anki AllInOne (quiz) format
+  - Anki Basic (recall) format
+- 🎨 **HTML Quiz Features**:
+  - Self-contained single HTML file
+  - Dark/light mode with auto-detect
+  - Question/answer shuffling
+  - Progress tracking and timer
+  - Session storage persistence
+  - Mobile-responsive design
+  - Markdown rendering in explanations
 - ✅ Type-safe with mypy strict mode
 - ✅ Linted with ruff
 - ✅ Tested with pytest
@@ -49,8 +66,8 @@ A CLI tool that exports the quiz-markdown-format to tools like Anki, Flashcard H
 
 ```bash
 # Clone the repository
-git clone https://github.com/dnvriend/markdown-quiz-exporter.git
-cd markdown-quiz-exporter
+git clone https://github.com/dnvriend/markdown-quiz-exporter-tool.git
+cd markdown-quiz-exporter-tool
 
 # Install globally with uv
 uv tool install .
@@ -59,7 +76,7 @@ uv tool install .
 ### Install with mise (recommended for development)
 
 ```bash
-cd markdown-quiz-exporter
+cd markdown-quiz-exporter-tool
 mise trust
 mise install
 uv sync
@@ -69,24 +86,120 @@ uv tool install .
 ### Verify installation
 
 ```bash
-markdown-quiz-exporter --version
+markdown-quiz-exporter-tool --version
 ```
 
 ## Usage
 
-### Basic Usage
+The tool provides three main export commands:
+
+### 1. Interactive HTML Quiz
+
+Generate a self-contained interactive HTML quiz that can be opened in any web browser:
+
+```bash
+# Basic export
+markdown-quiz-exporter-tool quiz-html quiz.md quiz.html --title "My Quiz"
+
+# Overwrite existing file
+markdown-quiz-exporter-tool quiz-html quiz.md quiz.html --title "AWS Quiz" --force
+
+# With verbose output
+markdown-quiz-exporter-tool quiz-html quiz.md quiz.html --title "Quiz" -vv
+```
+
+**Features:**
+- **Self-contained**: Single HTML file with embedded CSS and JavaScript
+- **Dark/Light Mode**: Automatic theme detection with manual toggle
+- **Shuffling**: Configurable question and answer randomization
+- **Progress Tracking**: Visual progress bar and timer
+- **Session Persistence**: Saves progress in browser storage
+- **Mobile Responsive**: Works on all screen sizes
+- **Markdown Support**: Renders markdown in explanations
+- **Multiple Question Types**: Supports both single and multiple choice
+
+**Opening the Quiz:**
+Simply open the generated HTML file in any modern web browser. No server or internet connection required after generation.
+
+### 2. Flashcard Hero Export
+
+Export quiz markdown files to Flashcard Hero TSV format:
+
+```bash
+# Basic export
+markdown-quiz-exporter-tool flashhero quiz.md flashcards.tsv
+
+# Overwrite existing file
+markdown-quiz-exporter-tool flashhero quiz.md flashcards.tsv --force
+
+# With verbose output
+markdown-quiz-exporter-tool flashhero quiz.md flashcards.tsv -vv
+```
+
+### 3. Anki Export
+
+Export quiz markdown files to Anki CSV format with two note types:
+
+#### AllInOne Format (Quiz) - Default
+
+Quiz-style learning with multiple choice questions:
+
+```bash
+# Export as quiz format (default)
+markdown-quiz-exporter-tool anki quiz.md quiz-cards.csv
+
+# Or explicitly specify quiz format
+markdown-quiz-exporter-tool anki quiz.md quiz-cards.csv --quiz
+```
+
+#### Basic Format (Recall)
+
+Simple question/answer recall cards:
+
+```bash
+# Export as recall format
+markdown-quiz-exporter-tool anki quiz.md recall-cards.csv --recall
+```
+
+### Quiz Markdown Format
+
+Quiz files are markdown files with this structure:
+
+```markdown
+Question text here?
+
+- (X) Correct answer
+- ( ) Wrong answer 1
+- ( ) Wrong answer 2
+
+# reason
+Explanation of why the answer is correct.
+
+---
+
+Next question here?
+...
+```
+
+**Note Types:**
+- Single choice: Use `( )` and `(X)` for radio button questions
+- Multiple choice: Use `[ ]` and `[X]` for checkbox questions
+
+For complete format specification, see `references/markdown-quiz-format.md`.
+
+### General Options
 
 ```bash
 # Show help
-markdown-quiz-exporter --help
-
-# Run the tool
-markdown-quiz-exporter
+markdown-quiz-exporter-tool --help
+markdown-quiz-exporter-tool quiz-html --help
+markdown-quiz-exporter-tool flashhero --help
+markdown-quiz-exporter-tool anki --help
 
 # Run with verbose output
-markdown-quiz-exporter -v      # INFO level
-markdown-quiz-exporter -vv     # DEBUG level
-markdown-quiz-exporter -vvv    # TRACE level (includes library internals)
+markdown-quiz-exporter-tool quiz-html quiz.md out.html --title "Quiz" -v    # INFO level
+markdown-quiz-exporter-tool flashhero quiz.md out.tsv -vv                  # DEBUG level
+markdown-quiz-exporter-tool anki quiz.md out.csv -vvv                      # TRACE level
 ```
 
 ## Multi-Level Verbosity Logging
@@ -106,23 +219,23 @@ The CLI supports progressive verbosity levels for debugging and troubleshooting.
 
 ```bash
 # Quiet mode - only errors and warnings
-markdown-quiz-exporter
+markdown-quiz-exporter-tool
 
 # INFO - see operations and progress
-markdown-quiz-exporter -v
+markdown-quiz-exporter-tool -v
 # Output:
-# [INFO] markdown-quiz-exporter started
-# [INFO] markdown-quiz-exporter completed
+# [INFO] markdown-quiz-exporter-tool started
+# [INFO] markdown-quiz-exporter-tool completed
 
 # DEBUG - see detailed information
-markdown-quiz-exporter -vv
+markdown-quiz-exporter-tool -vv
 # Output:
-# [INFO] markdown-quiz-exporter started
+# [INFO] markdown-quiz-exporter-tool started
 # [DEBUG] Running with verbose level: 2
-# [INFO] markdown-quiz-exporter completed
+# [INFO] markdown-quiz-exporter-tool completed
 
 # TRACE - see library internals (configure in logging_config.py)
-markdown-quiz-exporter -vvv
+markdown-quiz-exporter-tool -vvv
 ```
 
 ### Customizing Library Logging
@@ -156,29 +269,29 @@ The CLI provides native shell completion for bash, zsh, and fish shells.
 
 ```bash
 # Bash - active for current session only
-eval "$(markdown-quiz-exporter completion bash)"
+eval "$(markdown-quiz-exporter-tool completion bash)"
 
 # Zsh - active for current session only
-eval "$(markdown-quiz-exporter completion zsh)"
+eval "$(markdown-quiz-exporter-tool completion zsh)"
 
 # Fish - active for current session only
-markdown-quiz-exporter completion fish | source
+markdown-quiz-exporter-tool completion fish | source
 ```
 
 #### Permanent Setup (Recommended)
 
 ```bash
 # Bash - add to ~/.bashrc
-echo 'eval "$(markdown-quiz-exporter completion bash)"' >> ~/.bashrc
+echo 'eval "$(markdown-quiz-exporter-tool completion bash)"' >> ~/.bashrc
 source ~/.bashrc
 
 # Zsh - add to ~/.zshrc
-echo 'eval "$(markdown-quiz-exporter completion zsh)"' >> ~/.zshrc
+echo 'eval "$(markdown-quiz-exporter-tool completion zsh)"' >> ~/.zshrc
 source ~/.zshrc
 
 # Fish - save to completions directory
 mkdir -p ~/.config/fish/completions
-markdown-quiz-exporter completion fish > ~/.config/fish/completions/markdown-quiz-exporter.fish
+markdown-quiz-exporter-tool completion fish > ~/.config/fish/completions/markdown-quiz-exporter-tool.fish
 ```
 
 #### File-based Installation (Better Performance)
@@ -187,16 +300,16 @@ For better shell startup performance, generate completion scripts to files:
 
 ```bash
 # Bash
-markdown-quiz-exporter completion bash > ~/.markdown-quiz-exporter-complete.bash
-echo 'source ~/.markdown-quiz-exporter-complete.bash' >> ~/.bashrc
+markdown-quiz-exporter-tool completion bash > ~/.markdown-quiz-exporter-tool-complete.bash
+echo 'source ~/.markdown-quiz-exporter-tool-complete.bash' >> ~/.bashrc
 
 # Zsh
-markdown-quiz-exporter completion zsh > ~/.markdown-quiz-exporter-complete.zsh
-echo 'source ~/.markdown-quiz-exporter-complete.zsh' >> ~/.zshrc
+markdown-quiz-exporter-tool completion zsh > ~/.markdown-quiz-exporter-tool-complete.zsh
+echo 'source ~/.markdown-quiz-exporter-tool-complete.zsh' >> ~/.zshrc
 
 # Fish (automatic loading from completions directory)
 mkdir -p ~/.config/fish/completions
-markdown-quiz-exporter completion fish > ~/.config/fish/completions/markdown-quiz-exporter.fish
+markdown-quiz-exporter-tool completion fish > ~/.config/fish/completions/markdown-quiz-exporter-tool.fish
 ```
 
 ### Usage
@@ -205,15 +318,15 @@ Once installed, completion works automatically:
 
 ```bash
 # Tab completion for commands
-markdown-quiz-exporter <TAB>
+markdown-quiz-exporter-tool <TAB>
 # Shows: completion
 
 # Tab completion for options
-markdown-quiz-exporter --<TAB>
+markdown-quiz-exporter-tool --<TAB>
 # Shows: --verbose --version --help
 
 # Tab completion for shell types
-markdown-quiz-exporter completion <TAB>
+markdown-quiz-exporter-tool completion <TAB>
 # Shows: bash zsh fish
 ```
 
@@ -221,7 +334,7 @@ markdown-quiz-exporter completion <TAB>
 
 ```bash
 # View completion installation instructions
-markdown-quiz-exporter completion --help
+markdown-quiz-exporter-tool completion --help
 ```
 
 ## Development
@@ -230,8 +343,8 @@ markdown-quiz-exporter completion --help
 
 ```bash
 # Clone repository
-git clone https://github.com/dnvriend/markdown-quiz-exporter.git
-cd markdown-quiz-exporter
+git clone https://github.com/dnvriend/markdown-quiz-exporter-tool.git
+cd markdown-quiz-exporter-tool
 
 # Install dependencies
 make install
@@ -255,26 +368,37 @@ make security                # Run all security checks
 make check                   # Run all checks (lint, typecheck, test, security)
 make pipeline                # Run full pipeline (format, lint, typecheck, test, security, build, install-global)
 make build                   # Build package
-make run ARGS="..."          # Run markdown-quiz-exporter locally
+make run ARGS="..."          # Run markdown-quiz-exporter-tool locally
 make clean                   # Remove build artifacts
 ```
 
 ### Project Structure
 
 ```
-markdown-quiz-exporter/
-├── markdown_quiz_exporter/    # Main package
+markdown-quiz-exporter-tool/
+├── markdown_quiz_exporter/         # Main package
 │   ├── __init__.py
-│   ├── cli.py          # CLI entry point
-│   └── utils.py        # Utility functions
-├── tests/              # Test suite
-│   ├── __init__.py
+│   ├── cli.py                      # CLI entry point
+│   ├── quiz_parser.py              # Quiz markdown parser
+│   ├── flashcard_hero.py           # Flashcard Hero TSV exporter
+│   ├── anki.py                     # Anki CSV exporter
+│   ├── completion.py               # Shell completion
+│   ├── logging_config.py           # Multi-level logging
+│   └── utils.py                    # Utility functions
+├── tests/                          # Test suite
+│   ├── test_quiz_parser.py
+│   ├── test_flashcard_hero.py
+│   ├── test_anki.py
 │   └── test_utils.py
-├── pyproject.toml      # Project configuration
-├── Makefile            # Development commands
-├── README.md           # This file
-├── LICENSE             # MIT License
-└── CLAUDE.md           # Development documentation
+├── references/                     # Format specifications
+│   ├── markdown-quiz-format.md
+│   ├── flashcard-hero-tsv-format.md
+│   └── anki-csv-format.md
+├── pyproject.toml                  # Project configuration
+├── Makefile                        # Development commands
+├── README.md                       # This file
+├── LICENSE                         # MIT License
+└── CLAUDE.md                       # Development documentation
 ```
 
 ## Testing

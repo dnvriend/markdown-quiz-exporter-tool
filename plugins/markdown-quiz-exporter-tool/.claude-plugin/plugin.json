@@ -1,0 +1,8 @@
+{
+    "name": "markdown-quiz-exporter-tool",
+    "description": "CLI tool for exporting quiz markdown to multiple formats",
+    "version": "0.1.0",
+    "author": {
+        "name": "Dennis Vriend"
+    }
+}

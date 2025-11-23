@@ -1,10 +1,10 @@
-"""Tests for markdown_quiz_exporter.utils module.
+"""Tests for markdown_quiz_exporter_tool.utils module.
 
 Note: This code was generated with assistance from AI coding tools
 and has been reviewed and tested by a human.
 """
 
-from markdown_quiz_exporter.utils import get_greeting
+from markdown_quiz_exporter_tool.utils import get_greeting
 
 
 def test_get_greeting() -> None:
