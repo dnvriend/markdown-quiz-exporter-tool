@@ -75,6 +75,9 @@ class QuizHTMLGenerator:
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css" media="(prefers-color-scheme: light)">
     {self._build_styles()}
 </head>"""
 
@@ -119,6 +122,100 @@ class QuizHTMLGenerator:
         input:focus-visible {
             outline: 2px solid rgb(59 130 246);
             outline-offset: 2px;
+        }
+
+        /* Code block styling */
+        pre {
+            border-radius: 0.5rem;
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        /* Light mode code blocks */
+        pre code.hljs {
+            background: #f6f8fa;
+            color: #24292e;
+        }
+
+        /* Dark mode code blocks */
+        .dark pre code.hljs {
+            background: #0d1117;
+            color: #c9d1d9;
+        }
+
+        /* Inline code styling */
+        :not(pre) > code {
+            background: #f6f8fa;
+            color: #24292e;
+            padding: 0.2em 0.4em;
+            border-radius: 0.25rem;
+            font-size: 0.875em;
+        }
+
+        .dark :not(pre) > code {
+            background: #30363d;
+            color: #c9d1d9;
+        }
+
+        /* Reset font-weight for code blocks inside bold containers */
+        pre, pre code, code.hljs {
+            font-weight: normal !important;
+        }
+
+        /* Bold question text styling */
+        .bold-questions {
+            font-weight: 700;
+        }
+        .bold-questions pre,
+        .bold-questions code {
+            font-weight: normal !important;
+        }
+
+        /* Prose paragraph spacing - override Tailwind reset */
+        .prose p {
+            margin-top: 1em;
+            margin-bottom: 1em;
+        }
+        .prose p:first-child {
+            margin-top: 0;
+        }
+        .prose p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* List spacing in prose */
+        .prose ul, .prose ol {
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+            padding-left: 1.5em;
+        }
+        .prose ul {
+            list-style-type: disc !important;
+        }
+        .prose ol {
+            list-style-type: decimal !important;
+        }
+        .prose li {
+            margin-top: 0.25em;
+            margin-bottom: 0.25em;
+            display: list-item !important;
+        }
+
+        /* Links in prose */
+        .prose a {
+            color: #3b82f6;
+            text-decoration: underline;
+        }
+        .prose a:hover {
+            color: #2563eb;
+        }
+        .dark .prose a {
+            color: #60a5fa;
+        }
+        .dark .prose a:hover {
+            color: #93c5fd;
         }
     </style>"""
 
@@ -248,6 +345,7 @@ class QuizApp {
                 autoAdvanceDelay: 3,
                 timerEnabled: false,
                 timerMinutes: 90,
+                boldQuestions: true,
                 darkMode: this.detectDarkMode()
             },
             questions: this.prepareQuestions(),
@@ -680,6 +778,16 @@ class QuizApp {
                                 minuten)
                             </span>
                         </label>
+
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox"
+                                   id="bold-questions"
+                                   ${this.state.config.boldQuestions ? 'checked' : ''}
+                                   class="w-5 h-5 text-blue-600 rounded">
+                            <span class="text-gray-700 dark:text-gray-300">
+                                Vraagtekst vetgedrukt weergeven
+                            </span>
+                        </label>
                     </div>
 
                     <button id="start-quiz"
@@ -729,15 +837,15 @@ class QuizApp {
             answersHtml += `
                 <div class="border-2 ${borderClass} ${bgClass} rounded-lg p-4 cursor-pointer hover:border-blue-400 transition-colors"
                      data-answer-index="${answerIndex}">
-                    <label class="flex items-center cursor-pointer">
+                    <label class="flex items-start cursor-pointer">
                         <input type="${inputType}"
                                ${inputName ? 'name="' + inputName + '"' : ''}
                                ${isSelected ? 'checked' : ''}
                                ${isChecked ? 'disabled' : ''}
-                               class="w-5 h-5 text-blue-600 mr-3">
-                        <span class="flex-1 text-gray-900 dark:text-gray-100">
-                            ${this.escapeHtml(answer.text)}
-                        </span>
+                               class="w-5 h-5 text-blue-600 mr-3 mt-1 flex-shrink-0">
+                        <div class="flex-1 text-gray-900 dark:text-gray-100 prose prose-sm dark:prose-invert max-w-none">
+                            ${this.renderMarkdown(answer.text)}
+                        </div>
                         ${icon}
                     </label>
                 </div>
@@ -810,9 +918,9 @@ class QuizApp {
                         </div>
                     ` : ''}
 
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
-                        ${this.escapeHtml(question.text)}
-                    </h2>
+                    <div class="text-gray-900 dark:text-gray-100 mb-6 prose prose-lg dark:prose-invert max-w-none ${this.state.config.boldQuestions ? 'bold-questions' : ''}">
+                        ${this.renderMarkdown(question.text)}
+                    </div>
 
                     <div class="space-y-3 mb-6" id="answers-container">
                         ${answersHtml}
@@ -978,10 +1086,10 @@ class QuizApp {
 
             answersHtml += `
                 <div class="border-2 ${borderClass} ${bgClass} rounded-lg p-4">
-                    <div class="flex items-center">
-                        <span class="flex-1 text-gray-900 dark:text-gray-100">
-                            ${this.escapeHtml(answer.text)}
-                        </span>
+                    <div class="flex items-start">
+                        <div class="flex-1 text-gray-900 dark:text-gray-100 prose prose-sm dark:prose-invert max-w-none">
+                            ${this.renderMarkdown(answer.text)}
+                        </div>
                         ${icon}
                     </div>
                 </div>
@@ -1003,9 +1111,9 @@ class QuizApp {
                         </span>
                     </div>
 
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">
-                        ${this.escapeHtml(question.text)}
-                    </h2>
+                    <div class="text-gray-900 dark:text-gray-100 mb-6 prose prose-lg dark:prose-invert max-w-none ${this.state.config.boldQuestions ? 'bold-questions' : ''}">
+                        ${this.renderMarkdown(question.text)}
+                    </div>
 
                     <div class="space-y-3 mb-6">
                         ${answersHtml}
@@ -1045,6 +1153,7 @@ class QuizApp {
                 this.state.config.autoAdvanceDelay = parseInt(document.getElementById('auto-advance-delay').value);
                 this.state.config.timerEnabled = document.getElementById('timer-enabled').checked;
                 this.state.config.timerMinutes = parseInt(document.getElementById('timer-minutes').value);
+                this.state.config.boldQuestions = document.getElementById('bold-questions').checked;
                 this.startQuiz();
             });
         }
@@ -1151,6 +1260,33 @@ class QuizApp {
         // Fallback to escaped HTML if marked.js not loaded
         return this.escapeHtml(text);
     }
+}
+
+// Configure marked.js with highlight.js for syntax highlighting
+if (typeof marked !== 'undefined') {
+    const renderer = new marked.Renderer();
+
+    // Custom code renderer for syntax highlighting
+    if (typeof hljs !== 'undefined') {
+        renderer.code = function(code, language) {
+            // Handle marked v11+ object format
+            if (typeof code === 'object') {
+                language = code.lang;
+                code = code.text;
+            }
+            const validLang = language && hljs.getLanguage(language);
+            const highlighted = validLang
+                ? hljs.highlight(code, { language: language }).value
+                : hljs.highlightAuto(code).value;
+            return '<pre><code class="hljs ' + (language || '') + '">' + highlighted + '</code></pre>';
+        };
+    }
+
+    marked.setOptions({
+        renderer: renderer,
+        breaks: true,  // Convert single newlines to <br>
+        gfm: true      // GitHub Flavored Markdown
+    });
 }
 
 // Initialize the quiz application

@@ -59,9 +59,9 @@ class QuizParseError(Exception):
 class QuizParser:
     """Parser for quiz markdown files."""
 
-    # Regex patterns
-    SINGLE_CHOICE_PATTERN = re.compile(r"^-\s+\(([Xx ])\)\s+(.+)$")
-    MULTIPLE_CHOICE_PATTERN = re.compile(r"^-\s+\[([Xx ])\]\s+(.+)$")
+    # Regex patterns - allow empty or non-empty text after marker
+    SINGLE_CHOICE_PATTERN = re.compile(r"^-\s+\(([Xx ])\)\s*(.*)$")
+    MULTIPLE_CHOICE_PATTERN = re.compile(r"^-\s+\[([Xx ])\]\s*(.*)$")
     QUESTION_SEPARATOR = "---"
     REASON_MARKER = "# reason"
 
@@ -142,6 +142,7 @@ class QuizParser:
         lines = [line for line in block.split("\n")]
 
         # Extract question text (everything before the first answer option)
+        # Preserve newlines for markdown rendering
         question_text_lines = []
         answer_start_idx = 0
 
@@ -149,37 +150,42 @@ class QuizParser:
             if self._is_answer_line(line):
                 answer_start_idx = i
                 break
-            if line.strip():
-                question_text_lines.append(line.strip())
+            question_text_lines.append(line)
 
-        if not question_text_lines:
+        # Join with newlines to preserve markdown structure (codeblocks, etc.)
+        question_text = "\n".join(question_text_lines).strip()
+
+        if not question_text:
             self._raise_parse_error(
                 0, lines[0] if lines else "", "No question text found", block_number, lines
             )
 
-        question_text = " ".join(question_text_lines)
-
-        # Extract answers
+        # Extract answers with multi-line support
         answers = []
         question_type = None
         reason_start_idx = len(lines)
 
-        for i in range(answer_start_idx, len(lines)):
-            line = lines[i].strip()
+        i = answer_start_idx
+        while i < len(lines):
+            line = lines[i]
 
-            if line == self.REASON_MARKER:
+            # Check for reason marker (case-insensitive, stripped)
+            if line.strip().lower() == self.REASON_MARKER.lower():
                 reason_start_idx = i
                 break
 
-            if not line:
-                continue
-
-            # Try single choice pattern
+            # Try to match answer marker
             match = self.SINGLE_CHOICE_PATTERN.match(line)
+            answer_type = "single"
+            if not match:
+                match = self.MULTIPLE_CHOICE_PATTERN.match(line)
+                answer_type = "multiple"
+
             if match:
+                # Validate question type consistency
                 if question_type is None:
-                    question_type = "single"
-                elif question_type != "single":
+                    question_type = answer_type
+                elif question_type != answer_type:
                     self._raise_parse_error(
                         i,
                         line,
@@ -189,28 +195,29 @@ class QuizParser:
                     )
 
                 is_correct = match.group(1).upper() == "X"
-                answer_text = match.group(2).strip()
-                answers.append(Answer(text=answer_text, is_correct=is_correct))
-                continue
+                first_line_text = match.group(2)
 
-            # Try multiple choice pattern
-            match = self.MULTIPLE_CHOICE_PATTERN.match(line)
-            if match:
-                if question_type is None:
-                    question_type = "multiple"
-                elif question_type != "multiple":
-                    self._raise_parse_error(
-                        i,
-                        line,
-                        "Mixed answer types: Cannot mix ( ) and [ ] formats in same question",
-                        block_number,
-                        lines,
-                    )
+                # Collect multi-line answer content
+                answer_lines = [first_line_text] if first_line_text else []
+                i += 1
 
-                is_correct = match.group(1).upper() == "X"
-                answer_text = match.group(2).strip()
+                # Collect subsequent lines until next answer marker, reason, or end
+                while i < len(lines):
+                    next_line = lines[i]
+                    # Stop if we hit another answer marker or reason
+                    if self._is_answer_line(next_line):
+                        break
+                    if next_line.strip().lower() == self.REASON_MARKER.lower():
+                        break
+                    answer_lines.append(next_line)
+                    i += 1
+
+                # Join answer lines preserving structure for markdown
+                answer_text = "\n".join(answer_lines).strip()
                 answers.append(Answer(text=answer_text, is_correct=is_correct))
-                continue
+            else:
+                # Skip empty lines between answers
+                i += 1
 
         if not answers:
             # Find first line after question
@@ -236,14 +243,12 @@ class QuizParser:
                     )
                     break
 
-        # Extract reason section
+        # Extract reason section - preserve newlines for markdown
         reason_lines = []
         for i in range(reason_start_idx + 1, len(lines)):
-            line = lines[i].strip()
-            if line:
-                reason_lines.append(line)
+            reason_lines.append(lines[i])
 
-        reason = " ".join(reason_lines) if reason_lines else ""
+        reason = "\n".join(reason_lines).strip()
 
         return Question(
             text=question_text,

@@ -303,3 +303,162 @@ Answers without a question.
     err = exc_info.value.parse_error
     assert "No question text found" in err.error_message
     assert err.block_number == 1
+
+
+def test_codeblock_in_question(tmp_path: Path) -> None:
+    """Test parsing question with embedded codeblock."""
+    content = """What does this code do?
+
+```python
+def hello():
+    print("Hello")
+```
+
+- (X) Prints Hello
+- ( ) Returns Hello
+
+# reason
+The print function outputs to stdout.
+"""
+    quiz_file = tmp_path / "codeblock_question.md"
+    quiz_file.write_text(content, encoding="utf-8")
+
+    questions = parse_quiz_file(quiz_file)
+    assert len(questions) == 1
+
+    q = questions[0]
+    assert "```python" in q.text
+    assert 'print("Hello")' in q.text
+    assert "```" in q.text
+    assert len(q.answers) == 2
+
+
+def test_codeblock_in_answer(tmp_path: Path) -> None:
+    """Test parsing answer with codeblock (empty text after marker)."""
+    content = """Which code is correct?
+
+- ( )
+```python
+x = 1
+```
+- (X)
+```python
+x = "1"
+```
+
+# reason
+Strings use quotes.
+"""
+    quiz_file = tmp_path / "codeblock_answer.md"
+    quiz_file.write_text(content, encoding="utf-8")
+
+    questions = parse_quiz_file(quiz_file)
+    assert len(questions) == 1
+
+    q = questions[0]
+    assert len(q.answers) == 2
+
+    # Check first answer has codeblock
+    assert "```python" in q.answers[0].text
+    assert "x = 1" in q.answers[0].text
+
+    # Check second answer is correct and has codeblock
+    assert q.answers[1].is_correct
+    assert "```python" in q.answers[1].text
+    assert 'x = "1"' in q.answers[1].text
+
+
+def test_codeblock_in_answer_with_text(tmp_path: Path) -> None:
+    """Test parsing answer with both text and codeblock."""
+    content = """Which statement adds a policy?
+
+- ( ) Option A
+```json
+{"Effect": "Deny"}
+```
+- (X) Option B
+```json
+{"Effect": "Allow"}
+```
+
+# reason
+Allow is the correct effect.
+"""
+    quiz_file = tmp_path / "codeblock_answer_text.md"
+    quiz_file.write_text(content, encoding="utf-8")
+
+    questions = parse_quiz_file(quiz_file)
+    assert len(questions) == 1
+
+    q = questions[0]
+    assert len(q.answers) == 2
+
+    # First answer has text and codeblock
+    assert "Option A" in q.answers[0].text
+    assert "```json" in q.answers[0].text
+    assert '"Deny"' in q.answers[0].text
+
+    # Second answer is correct
+    assert q.answers[1].is_correct
+    assert "Option B" in q.answers[1].text
+    assert '"Allow"' in q.answers[1].text
+
+
+def test_codeblock_in_reason(tmp_path: Path) -> None:
+    """Test parsing reason with codeblock."""
+    content = """What is correct?
+
+- (X) Correct
+- ( ) Wrong
+
+# reason
+The correct answer uses this pattern:
+
+```python
+def example():
+    return True
+```
+
+This is a standard pattern.
+"""
+    quiz_file = tmp_path / "codeblock_reason.md"
+    quiz_file.write_text(content, encoding="utf-8")
+
+    questions = parse_quiz_file(quiz_file)
+    assert len(questions) == 1
+
+    q = questions[0]
+    assert "```python" in q.reason
+    assert "return True" in q.reason
+    assert "standard pattern" in q.reason
+
+
+def test_multiline_question_preserved(tmp_path: Path) -> None:
+    """Test that newlines in question text are preserved for markdown."""
+    content = """First paragraph of the question.
+
+Second paragraph with more detail.
+
+```json
+{"key": "value"}
+```
+
+Final question line?
+
+- (X) Yes
+- ( ) No
+
+# reason
+Test.
+"""
+    quiz_file = tmp_path / "multiline_question.md"
+    quiz_file.write_text(content, encoding="utf-8")
+
+    questions = parse_quiz_file(quiz_file)
+    q = questions[0]
+
+    # Check newlines are preserved (not joined with spaces)
+    assert "\n" in q.text
+    assert "First paragraph" in q.text
+    assert "Second paragraph" in q.text
+    assert "```json" in q.text
