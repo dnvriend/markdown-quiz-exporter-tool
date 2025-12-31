@@ -712,6 +712,9 @@ class QuizApp {
 
         // Attach event listeners after rendering
         this.attachEventListeners();
+
+        // Render LaTeX formulas
+        this.renderLatex();
     }
 
     // Render intro/config page
