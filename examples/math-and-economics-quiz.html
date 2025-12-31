@@ -1,77 +1,15 @@
-"""HTML quiz generator for interactive single-page quiz applications.
-
-This module generates self-contained HTML files with embedded quiz data,
-CSS styling (Tailwind), and JavaScript application logic.
-
-Note: This code was generated with assistance from AI coding tools
-and has been reviewed and tested by a human.
-"""
-
-import html
-import json
-from pathlib import Path
-
-from markdown_quiz_exporter_tool.quiz_parser import Question
-
-
-class QuizHTMLGenerator:
-    """Generator for interactive HTML quiz pages."""
-
-    def __init__(self, questions: list[Question], title: str) -> None:
-        """Initialize the HTML generator.
-
-        Args:
-            questions: List of Question objects to include in quiz
-            title: Quiz title displayed on intro page
-        """
-        self.questions = questions
-        self.title = title
-
-    def generate(self, output_path: Path) -> int:
-        """Generate complete HTML quiz file.
-
-        Args:
-            output_path: Path where HTML file will be written
-
-        Returns:
-            File size in bytes
-
-        Raises:
-            OSError: If writing to file fails
-        """
-        html_content = self._build_html()
-        output_path.write_text(html_content, encoding="utf-8")
-        return len(html_content.encode("utf-8"))
-
-    def _build_html(self) -> str:
-        """Build complete HTML document.
-
-        Returns:
-            Complete HTML document as string
-        """
-        return f"""<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="nl">
-{self._build_head()}
-{self._build_body()}
-</html>"""
-
-    def _build_head(self) -> str:
-        """Build HTML head section.
-
-        Returns:
-            HTML head section with meta tags, title, and styles
-        """
-        escaped_title = html.escape(self.title)
-        return f"""<head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{escaped_title}</title>
+    <title>Math and Economics Quiz</title>
     <script>
-        tailwind = {{
-            config: {{
+        tailwind = {
+            config: {
                 darkMode: 'class'
-            }}
-        }};
+            }
+        };
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
@@ -80,18 +18,9 @@ class QuizHTMLGenerator:
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css" media="(prefers-color-scheme: light)">
     <!-- KaTeX for LaTeX math rendering -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
-    {self._build_styles()}
-</head>"""
-
-    def _build_styles(self) -> str:
-        """Build embedded CSS styles.
-
-        Returns:
-            Style tag with custom CSS
-        """
-        return """<style>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
+    <style>
         /* Smooth transitions */
         * {
             transition-property: color, background-color, border-color;
@@ -226,103 +155,20 @@ class QuizHTMLGenerator:
         .dark .katex {
             color: #e5e7eb;
         }
-    </style>"""
-
-    def _build_body(self) -> str:
-        """Build HTML body section.
-
-        Returns:
-            HTML body with app container and embedded scripts
-        """
-        return f"""<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
     <!-- App container -->
     <div id="app" class="container mx-auto px-4 py-8 max-w-4xl"></div>
 
     <!-- Quiz data -->
     <script>
-        const QUIZ_DATA = {self._build_quiz_data()};
+        const QUIZ_DATA = {"title":"Math and Economics Quiz","questions":[{"category":"","text":"What is the formula for the circumference of a circle with radius $r$?","type":"single","answers":[{"text":"$C = \\pi r$","correct":false},{"text":"$C = 2\\pi r$","correct":true},{"text":"$C = \\pi r^2$","correct":false},{"text":"$C = 2\\pi r^2$","correct":false}],"reason":"The circumference is the distance around a circle. It equals the diameter ($2r$) multiplied by $\\pi$:\n$$C = 2\\pi r$$"},{"category":"","text":"What is the area of a circle with radius $r$?","type":"single","answers":[{"text":"$A = 2\\pi r$","correct":false},{"text":"$A = \\pi r$","correct":false},{"text":"$A = \\pi r^2$","correct":true},{"text":"$A = 2\\pi r^2$","correct":false}],"reason":"The area of a circle is:\n$$A = \\pi r^2$$\n\nFor example, a circle with $r = 3$ has area $A = \\pi \\cdot 9 = 9\\pi \\approx 28.27$ square units."},{"category":"","text":"In a right triangle, if $\\theta$ is an angle, what does $\\sin(\\theta)$ equal?","type":"single","answers":[{"text":"$\\frac{\\text{adjacent}}{\\text{hypotenuse}}$","correct":false},{"text":"$\\frac{\\text{opposite}}{\\text{hypotenuse}}$","correct":true},{"text":"$\\frac{\\text{opposite}}{\\text{adjacent}}$","correct":false},{"text":"$\\frac{\\text{hypotenuse}}{\\text{opposite}}$","correct":false}],"reason":"The sine function is defined as:\n$$\\sin(\\theta) = \\frac{\\text{opposite}}{\\text{hypotenuse}}$$\n\nRemember SOH-CAH-TOA:\n- **S**ine = **O**pposite / **H**ypotenuse\n- **C**osine = **A**djacent / **H**ypotenuse\n- **T**angent = **O**pposite / **A**djacent"},{"category":"","text":"What is the value of $\\sin^2(\\theta) + \\cos^2(\\theta)$?","type":"single","answers":[{"text":"$0$","correct":false},{"text":"$1$","correct":true},{"text":"$2$","correct":false},{"text":"$\\tan(\\theta)$","correct":false}],"reason":"This is the **Pythagorean identity**, one of the fundamental trigonometric identities:\n$$\\sin^2(\\theta) + \\cos^2(\\theta) = 1$$\n\nThis follows from the Pythagorean theorem applied to a unit circle."},{"category":"","text":"What is $\\tan(\\theta)$ expressed in terms of sine and cosine?","type":"single","answers":[{"text":"$\\frac{\\cos(\\theta)}{\\sin(\\theta)}$","correct":false},{"text":"$\\frac{\\sin(\\theta)}{\\cos(\\theta)}$","correct":true},{"text":"$\\sin(\\theta) \\cdot \\cos(\\theta)$","correct":false},{"text":"$\\sin(\\theta) + \\cos(\\theta)$","correct":false}],"reason":"The tangent is the ratio of sine to cosine:\n$$\\tan(\\theta) = \\frac{\\sin(\\theta)}{\\cos(\\theta)}$$"},{"category":"","text":"What is the derivative of $f(x) = x^3$?","type":"single","answers":[{"text":"$f'(x) = x^2$","correct":false},{"text":"$f'(x) = 3x^2$","correct":true},{"text":"$f'(x) = 3x^3$","correct":false},{"text":"$f'(x) = x^4$","correct":false}],"reason":"Using the power rule $\\frac{d}{dx}x^n = nx^{n-1}$:\n$$\\frac{d}{dx}x^3 = 3x^{3-1} = 3x^2$$"},{"category":"","text":"What is $\\int x^2 \\, dx$?","type":"single","answers":[{"text":"$\\frac{x^3}{3} + C$","correct":true},{"text":"$2x + C$","correct":false},{"text":"$x^3 + C$","correct":false},{"text":"$\\frac{x^2}{2} + C$","correct":false}],"reason":"The power rule for integration states $\\int x^n \\, dx = \\frac{x^{n+1}}{n+1} + C$:\n$$\\int x^2 \\, dx = \\frac{x^{2+1}}{2+1} + C = \\frac{x^3}{3} + C$$"},{"category":"","text":"Evaluate the definite integral $\\int_0^2 x \\, dx$.","type":"single","answers":[{"text":"$1$","correct":false},{"text":"$2$","correct":true},{"text":"$4$","correct":false},{"text":"$0$","correct":false}],"reason":"First find the antiderivative, then apply the limits:\n$$\\int_0^2 x \\, dx = \\left[\\frac{x^2}{2}\\right]_0^2 = \\frac{2^2}{2} - \\frac{0^2}{2} = \\frac{4}{2} - 0 = 2$$"},{"category":"","text":"What is the formula for compound interest, where $P$ is principal, $r$ is annual rate, $n$ is compounding frequency, and $t$ is time in years?","type":"single","answers":[{"text":"$A = P(1 + rt)$","correct":false},{"text":"$A = P\\left(1 + \\frac{r}{n}\\right)^{nt}$","correct":true},{"text":"$A = Pe^{rt}$","correct":false},{"text":"$A = P + Prt$","correct":false}],"reason":"The compound interest formula is:\n$$A = P\\left(1 + \\frac{r}{n}\\right)^{nt}$$\n\nWhere:\n- $A$ = final amount\n- $P$ = principal (initial investment)\n- $r$ = annual interest rate (decimal)\n- $n$ = number of times compounded per year\n- $t$ = time in years"},{"category":"","text":"What is the Present Value (PV) formula for a future cash flow $FV$ discounted at rate $r$ over $n$ periods?","type":"single","answers":[{"text":"$PV = FV \\times (1 + r)^n$","correct":false},{"text":"$PV = \\frac{FV}{(1 + r)^n}$","correct":true},{"text":"$PV = FV \\times r \\times n$","correct":false},{"text":"$PV = FV - (r \\times n)$","correct":false}],"reason":"The present value discounts future money back to today:\n$$PV = \\frac{FV}{(1 + r)^n}$$\n\nThis reflects the **time value of money**: €100 today is worth more than €100 in the future."},{"category":"","text":"The Net Present Value (NPV) formula is $NPV = \\sum_{t=0}^{n} \\frac{CF_t}{(1 + r)^t}$. If initial investment is €1000 and you receive €600 in year 1 and €600 in year 2 at $r = 10\\%$, what is the NPV?","type":"single","answers":[{"text":"€-100","correct":false},{"text":"€41.32","correct":true},{"text":"€200","correct":false},{"text":"€1200","correct":false}],"reason":"Calculate each term:\n$$\\begin{aligned}\nNPV &= \\frac{-1000}{(1.1)^0} + \\frac{600}{(1.1)^1} + \\frac{600}{(1.1)^2} \\\\\n&= -1000 + 545.45 + 495.87 \\\\\n&= 41.32\n\\end{aligned}$$\n\nSince $NPV > 0$, this is a profitable investment."},{"category":"","text":"What is the formula for Return on Investment (ROI)?","type":"single","answers":[{"text":"$ROI = \\frac{\\text{Revenue}}{\\text{Cost}} \\times 100\\%$","correct":false},{"text":"$ROI = \\frac{\\text{Gain} - \\text{Cost}}{\\text{Cost}} \\times 100\\%$","correct":true},{"text":"$ROI = \\frac{\\text{Cost}}{\\text{Gain}} \\times 100\\%$","correct":false},{"text":"$ROI = \\text{Gain} - \\text{Cost}$","correct":false}],"reason":"ROI measures the return relative to the investment cost:\n$$ROI = \\frac{\\text{Gain} - \\text{Cost}}{\\text{Cost}} \\times 100\\%$$\n\nOr equivalently: $ROI = \\frac{\\text{Net Profit}}{\\text{Cost}} \\times 100\\%$"},{"category":"","text":"The price elasticity of demand $E_d$ measures how quantity demanded responds to price changes. What is the formula?","type":"single","answers":[{"text":"$E_d = \\frac{\\Delta P}{\\Delta Q}$","correct":false},{"text":"$E_d = \\frac{\\%\\Delta Q_d}{\\%\\Delta P}$","correct":true},{"text":"$E_d = \\frac{P}{Q}$","correct":false},{"text":"$E_d = Q \\times P$","correct":false}],"reason":"Price elasticity of demand is:\n$$E_d = \\frac{\\%\\Delta Q_d}{\\%\\Delta P} = \\frac{\\frac{\\Delta Q}{Q}}{\\frac{\\Delta P}{P}}$$\n\n- If $|E_d| > 1$: **elastic** demand (sensitive to price)\n- If $|E_d| < 1$: **inelastic** demand (insensitive to price)\n- If $|E_d| = 1$: **unit elastic**"},{"category":"","text":"In economics, the profit maximization condition for a firm is:","type":"single","answers":[{"text":"$MR = MC$","correct":true},{"text":"$MR > MC$","correct":false},{"text":"$TR = TC$","correct":false},{"text":"$AR = AC$","correct":false}],"reason":"A firm maximizes profit where **Marginal Revenue equals Marginal Cost**:\n$$MR = MC$$\n\nAt this point:\n- If $MR > MC$: producing more increases profit\n- If $MR < MC$: producing less increases profit\n- If $MR = MC$: profit is maximized"},{"category":"","text":"The Break-Even Point (BEP) in units is calculated as:","type":"single","answers":[{"text":"$BEP = \\frac{FC}{P}$","correct":false},{"text":"$BEP = \\frac{FC}{P - VC}$","correct":true},{"text":"$BEP = \\frac{VC}{P - FC}$","correct":false},{"text":"$BEP = FC + VC$","correct":false}],"reason":"The break-even point is where total revenue equals total cost:\n$$BEP = \\frac{FC}{P - VC}$$\n\nWhere:\n- $FC$ = Fixed Costs\n- $P$ = Price per unit\n- $VC$ = Variable Cost per unit\n- $P - VC$ = **Contribution Margin** per unit"},{"category":"","text":"What is the quadratic formula to solve $ax^2 + bx + c = 0$?","type":"single","answers":[{"text":"$x = \\frac{-b \\pm \\sqrt{b^2 + 4ac}}{2a}$","correct":false},{"text":"$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$","correct":true},{"text":"$x = \\frac{b \\pm \\sqrt{b^2 - 4ac}}{2a}$","correct":false},{"text":"$x = \\frac{-b \\pm \\sqrt{b - 4ac}}{a}$","correct":false}],"reason":"The quadratic formula is:\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n\nThe **discriminant** $D = b^2 - 4ac$ determines the nature of solutions:\n- $D > 0$: two real solutions\n- $D = 0$: one real solution\n- $D < 0$: no real solutions (complex roots)"},{"category":"","text":"What is the derivative of $e^x$?","type":"single","answers":[{"text":"$xe^{x-1}$","correct":false},{"text":"$e^x$","correct":true},{"text":"$\\ln(x)$","correct":false},{"text":"$e^{x-1}$","correct":false}],"reason":"The exponential function $e^x$ is its own derivative:\n$$\\frac{d}{dx}e^x = e^x$$\n\nThis is one of the special properties of the number $e \\approx 2.71828$."},{"category":"","text":"What is $\\int e^x \\, dx$?","type":"single","answers":[{"text":"$xe^x + C$","correct":false},{"text":"$e^x + C$","correct":true},{"text":"$\\frac{e^x}{x} + C$","correct":false},{"text":"$e^{x+1} + C$","correct":false}],"reason":"Since the derivative of $e^x$ is $e^x$, the integral is:\n$$\\int e^x \\, dx = e^x + C$$"},{"category":"","text":"In CAPM, the formula is $E(R_i) = R_f + \\beta_i(E(R_m) - R_f)$. What does $\\beta_i$ represent?","type":"single","answers":[{"text":"The risk-free rate","correct":false},{"text":"The market return","correct":false},{"text":"The systematic risk of asset $i$ relative to the market","correct":true},{"text":"The total return of asset $i$","correct":false}],"reason":"In the **CAPM** (Capital Asset Pricing Model) formula:\n- $R_f$ = risk-free rate\n- $E(R_m)$ = expected market return\n- $\\beta_i$ = beta coefficient, measuring **systematic (market) risk**\n\nA $\\beta = 1$ means the asset moves with the market. $\\beta > 1$ means more volatile than market."},{"category":"","text":"The GDP (Gross Domestic Product) expenditure formula is:","type":"single","answers":[{"text":"$GDP = C + I + G + (X - M)$","correct":true},{"text":"$GDP = C + I + G + X + M$","correct":false},{"text":"$GDP = C - I + G + X$","correct":false},{"text":"$GDP = C + I - G + M$","correct":false}],"reason":"GDP by expenditure approach:\n$$GDP = C + I + G + (X - M)$$\n\nWhere:\n- $C$ = Consumer spending\n- $I$ = Investment\n- $G$ = Government spending\n- $X$ = Exports\n- $M$ = Imports\n- $(X - M)$ = **Net exports**"}]};
     </script>
 
     <!-- Quiz application -->
     <script>
-        {self._build_javascript()}
-    </script>
-</body>"""
-
-    def _build_quiz_data(self) -> str:
-        """Convert questions to JSON format.
-
-        Returns:
-            JSON string with quiz data
-        """
-        quiz_data = {
-            "title": self.title,
-            "questions": [self._question_to_dict(q) for q in self.questions],
-        }
-        return json.dumps(quiz_data, ensure_ascii=False, separators=(",", ":"))
-
-    def _question_to_dict(self, question: Question) -> dict[str, object]:
-        """Convert Question object to dictionary.
-
-        Args:
-            question: Question object to convert
-
-        Returns:
-            Dictionary representation of question
-        """
-        # Extract category from question text if present
-        category = self._extract_category(question.text)
-        clean_text = self._clean_question_text(question.text)
-
-        return {
-            "category": category,
-            "text": clean_text,
-            "type": question.question_type,
-            "answers": [{"text": ans.text, "correct": ans.is_correct} for ans in question.answers],
-            "reason": question.reason,
-        }
-
-    def _extract_category(self, text: str) -> str:
-        """Extract category tag from question text.
-
-        Args:
-            text: Question text that may contain category prefix
-
-        Returns:
-            Category name or empty string
-        """
-        # Look for pattern: "CATEGORY: Question text"
-        if ":" in text:
-            parts = text.split(":", 1)
-            potential_category = parts[0].strip()
-            # Check if it's all caps and short (likely a category)
-            if potential_category.isupper() and len(potential_category) < 30:
-                return potential_category
-        return ""
-
-    def _clean_question_text(self, text: str) -> str:
-        """Remove category prefix from question text.
-
-        Args:
-            text: Question text that may contain category prefix
-
-        Returns:
-            Clean question text
-        """
-        category = self._extract_category(text)
-        if category:
-            return text.split(":", 1)[1].strip()
-        return text
-
-    def _build_javascript(self) -> str:
-        """Build embedded JavaScript application.
-
-        Returns:
-            Complete JavaScript quiz application code
-        """
-        # ruff: noqa: E501
-        # Long lines in HTML/JS templates are acceptable for readability
-        return """
+        
 // Quiz Application
 class QuizApp {
     constructor(quizData) {
@@ -1281,8 +1127,8 @@ class QuizApp {
                 delimiters: [
                     {left: '$$', right: '$$', display: true},
                     {left: '$', right: '$', display: false},
-                    {left: '\\\\(', right: '\\\\)', display: false},
-                    {left: '\\\\[', right: '\\\\]', display: true}
+                    {left: '\\(', right: '\\)', display: false},
+                    {left: '\\[', right: '\\]', display: true}
                 ],
                 throwOnError: false,
                 ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'option']
@@ -1320,22 +1166,7 @@ if (typeof marked !== 'undefined') {
 
 // Initialize the quiz application
 const quizApp = new QuizApp(QUIZ_DATA);
-"""
 
-
-def export_to_quiz_html(questions: list[Question], output_path: Path, title: str) -> int:
-    """Export questions to interactive HTML quiz.
-
-    Args:
-        questions: List of Question objects to export
-        output_path: Path where HTML file will be written
-        title: Quiz title displayed on intro page
-
-    Returns:
-        File size in bytes
-
-    Raises:
-        OSError: If writing to file fails
-    """
-    generator = QuizHTMLGenerator(questions, title)
-    return generator.generate(output_path)
+    </script>
+</body>
+</html>

@@ -1,77 +1,15 @@
-"""HTML quiz generator for interactive single-page quiz applications.
-
-This module generates self-contained HTML files with embedded quiz data,
-CSS styling (Tailwind), and JavaScript application logic.
-
-Note: This code was generated with assistance from AI coding tools
-and has been reviewed and tested by a human.
-"""
-
-import html
-import json
-from pathlib import Path
-
-from markdown_quiz_exporter_tool.quiz_parser import Question
-
-
-class QuizHTMLGenerator:
-    """Generator for interactive HTML quiz pages."""
-
-    def __init__(self, questions: list[Question], title: str) -> None:
-        """Initialize the HTML generator.
-
-        Args:
-            questions: List of Question objects to include in quiz
-            title: Quiz title displayed on intro page
-        """
-        self.questions = questions
-        self.title = title
-
-    def generate(self, output_path: Path) -> int:
-        """Generate complete HTML quiz file.
-
-        Args:
-            output_path: Path where HTML file will be written
-
-        Returns:
-            File size in bytes
-
-        Raises:
-            OSError: If writing to file fails
-        """
-        html_content = self._build_html()
-        output_path.write_text(html_content, encoding="utf-8")
-        return len(html_content.encode("utf-8"))
-
-    def _build_html(self) -> str:
-        """Build complete HTML document.
-
-        Returns:
-            Complete HTML document as string
-        """
-        return f"""<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="nl">
-{self._build_head()}
-{self._build_body()}
-</html>"""
-
-    def _build_head(self) -> str:
-        """Build HTML head section.
-
-        Returns:
-            HTML head section with meta tags, title, and styles
-        """
-        escaped_title = html.escape(self.title)
-        return f"""<head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{escaped_title}</title>
+    <title>Percent Test</title>
     <script>
-        tailwind = {{
-            config: {{
+        tailwind = {
+            config: {
                 darkMode: 'class'
-            }}
-        }};
+            }
+        };
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
@@ -80,18 +18,9 @@ class QuizHTMLGenerator:
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css" media="(prefers-color-scheme: light)">
     <!-- KaTeX for LaTeX math rendering -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
-    {self._build_styles()}
-</head>"""
-
-    def _build_styles(self) -> str:
-        """Build embedded CSS styles.
-
-        Returns:
-            Style tag with custom CSS
-        """
-        return """<style>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
+    <style>
         /* Smooth transitions */
         * {
             transition-property: color, background-color, border-color;
@@ -226,103 +155,20 @@ class QuizHTMLGenerator:
         .dark .katex {
             color: #e5e7eb;
         }
-    </style>"""
-
-    def _build_body(self) -> str:
-        """Build HTML body section.
-
-        Returns:
-            HTML body with app container and embedded scripts
-        """
-        return f"""<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
     <!-- App container -->
     <div id="app" class="container mx-auto px-4 py-8 max-w-4xl"></div>
 
     <!-- Quiz data -->
     <script>
-        const QUIZ_DATA = {self._build_quiz_data()};
+        const QUIZ_DATA = {"title":"Percent Test","questions":[{"category":"","text":"What is $50\\%$ of $200$?","type":"single","answers":[{"text":"$50$","correct":false},{"text":"$100$","correct":true},{"text":"$150$","correct":false},{"text":"$200$","correct":false}],"reason":"To find $50\\%$ of a number, multiply by $0.5$:\n$$50\\% \\times 200 = 0.5 \\times 200 = 100$$"}]};
     </script>
 
     <!-- Quiz application -->
     <script>
-        {self._build_javascript()}
-    </script>
-</body>"""
-
-    def _build_quiz_data(self) -> str:
-        """Convert questions to JSON format.
-
-        Returns:
-            JSON string with quiz data
-        """
-        quiz_data = {
-            "title": self.title,
-            "questions": [self._question_to_dict(q) for q in self.questions],
-        }
-        return json.dumps(quiz_data, ensure_ascii=False, separators=(",", ":"))
-
-    def _question_to_dict(self, question: Question) -> dict[str, object]:
-        """Convert Question object to dictionary.
-
-        Args:
-            question: Question object to convert
-
-        Returns:
-            Dictionary representation of question
-        """
-        # Extract category from question text if present
-        category = self._extract_category(question.text)
-        clean_text = self._clean_question_text(question.text)
-
-        return {
-            "category": category,
-            "text": clean_text,
-            "type": question.question_type,
-            "answers": [{"text": ans.text, "correct": ans.is_correct} for ans in question.answers],
-            "reason": question.reason,
-        }
-
-    def _extract_category(self, text: str) -> str:
-        """Extract category tag from question text.
-
-        Args:
-            text: Question text that may contain category prefix
-
-        Returns:
-            Category name or empty string
-        """
-        # Look for pattern: "CATEGORY: Question text"
-        if ":" in text:
-            parts = text.split(":", 1)
-            potential_category = parts[0].strip()
-            # Check if it's all caps and short (likely a category)
-            if potential_category.isupper() and len(potential_category) < 30:
-                return potential_category
-        return ""
-
-    def _clean_question_text(self, text: str) -> str:
-        """Remove category prefix from question text.
-
-        Args:
-            text: Question text that may contain category prefix
-
-        Returns:
-            Clean question text
-        """
-        category = self._extract_category(text)
-        if category:
-            return text.split(":", 1)[1].strip()
-        return text
-
-    def _build_javascript(self) -> str:
-        """Build embedded JavaScript application.
-
-        Returns:
-            Complete JavaScript quiz application code
-        """
-        # ruff: noqa: E501
-        # Long lines in HTML/JS templates are acceptable for readability
-        return """
+        
 // Quiz Application
 class QuizApp {
     constructor(quizData) {
@@ -1281,8 +1127,8 @@ class QuizApp {
                 delimiters: [
                     {left: '$$', right: '$$', display: true},
                     {left: '$', right: '$', display: false},
-                    {left: '\\\\(', right: '\\\\)', display: false},
-                    {left: '\\\\[', right: '\\\\]', display: true}
+                    {left: '\\(', right: '\\)', display: false},
+                    {left: '\\[', right: '\\]', display: true}
                 ],
                 throwOnError: false,
                 ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'option']
@@ -1320,22 +1166,7 @@ if (typeof marked !== 'undefined') {
 
 // Initialize the quiz application
 const quizApp = new QuizApp(QUIZ_DATA);
-"""
 
-
-def export_to_quiz_html(questions: list[Question], output_path: Path, title: str) -> int:
-    """Export questions to interactive HTML quiz.
-
-    Args:
-        questions: List of Question objects to export
-        output_path: Path where HTML file will be written
-        title: Quiz title displayed on intro page
-
-    Returns:
-        File size in bytes
-
-    Raises:
-        OSError: If writing to file fails
-    """
-    generator = QuizHTMLGenerator(questions, title)
-    return generator.generate(output_path)
+    </script>
+</body>
+</html>

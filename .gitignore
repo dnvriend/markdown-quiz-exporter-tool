@@ -52,3 +52,6 @@ Thumbs.db
 
 # Test files
 quiz1.md
+
+# Git worktrees for job isolation
+/trees/
