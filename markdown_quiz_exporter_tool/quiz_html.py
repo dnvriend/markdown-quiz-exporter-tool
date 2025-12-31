@@ -1269,6 +1269,23 @@ class QuizApp {
         // Fallback to escaped HTML if marked.js not loaded
         return this.escapeHtml(text);
     }
+
+    // Utility: Render LaTeX math formulas
+    renderLatex() {
+        if (typeof renderMathInElement !== 'undefined') {
+            const app = document.getElementById('app');
+            renderMathInElement(app, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\\\(', right: '\\\\)', display: false},
+                    {left: '\\\\[', right: '\\\\]', display: true}
+                ],
+                throwOnError: false,
+                ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'option']
+            });
+        }
+    }
 }
 
 // Configure marked.js with highlight.js for syntax highlighting
