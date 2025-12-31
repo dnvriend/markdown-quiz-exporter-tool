@@ -78,6 +78,10 @@ class QuizHTMLGenerator:
     <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css" media="(prefers-color-scheme: light)">
+    <!-- KaTeX for LaTeX math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
     {self._build_styles()}
 </head>"""
 
@@ -216,6 +220,11 @@ class QuizHTMLGenerator:
         }
         .dark .prose a:hover {
             color: #93c5fd;
+        }
+
+        /* KaTeX dark mode support */
+        .dark .katex {
+            color: #e5e7eb;
         }
     </style>"""
 
@@ -703,6 +712,9 @@ class QuizApp {
 
         // Attach event listeners after rendering
         this.attachEventListeners();
+
+        // Render LaTeX formulas
+        this.renderLatex();
     }
 
     // Render intro/config page
@@ -1259,6 +1271,23 @@ class QuizApp {
         }
         // Fallback to escaped HTML if marked.js not loaded
         return this.escapeHtml(text);
+    }
+
+    // Utility: Render LaTeX math formulas
+    renderLatex() {
+        if (typeof renderMathInElement !== 'undefined') {
+            const app = document.getElementById('app');
+            renderMathInElement(app, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\\\(', right: '\\\\)', display: false},
+                    {left: '\\\\[', right: '\\\\]', display: true}
+                ],
+                throwOnError: false,
+                ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'option']
+            });
+        }
     }
 }
 
