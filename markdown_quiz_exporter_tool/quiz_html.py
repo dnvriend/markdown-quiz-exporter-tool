@@ -221,6 +221,11 @@ class QuizHTMLGenerator:
         .dark .prose a:hover {
             color: #93c5fd;
         }
+
+        /* KaTeX dark mode support */
+        .dark .katex {
+            color: #e5e7eb;
+        }
     </style>"""
 
     def _build_body(self) -> str:
