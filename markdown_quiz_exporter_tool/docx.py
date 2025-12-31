@@ -147,9 +147,7 @@ class DocxExporter:
         # Add reason text in italic with markdown formatting
         self._add_formatted_text(para, reason, base_italic=True)
 
-    def _add_formatted_text(
-        self, paragraph: Any, text: str, base_italic: bool = False
-    ) -> None:
+    def _add_formatted_text(self, paragraph: Any, text: str, base_italic: bool = False) -> None:
         """Add text with markdown formatting to a paragraph.
 
         Handles bold (**text**), italic (*text*), inline code (`code`),
