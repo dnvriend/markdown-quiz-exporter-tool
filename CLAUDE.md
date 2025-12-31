@@ -2,7 +2,7 @@
 
 ## Goal
 
-A CLI tool that exports quiz markdown files to multiple formats: interactive HTML quizzes, Anki flashcards, and Flashcard Hero TSV.
+A CLI tool that exports quiz markdown files to multiple formats: interactive HTML quizzes, Anki flashcards, Flashcard Hero TSV, and Microsoft Word DOCX.
 
 ## What is markdown-quiz-exporter-tool?
 
@@ -19,6 +19,7 @@ A CLI tool that exports quiz markdown files to multiple formats: interactive HTM
 ### Dependencies
 
 - `click` - CLI framework
+- `python-docx` - Word DOCX generation
 
 ### Development Dependencies
 
@@ -74,7 +75,14 @@ markdown-quiz-exporter-tool [OPTIONS] COMMAND [ARGS]...
    - Optional: `-f, --force` - Overwrite existing file
    - Optional: `-v, --verbose` - Verbosity level
 
-4. **completion** - Generate shell completion scripts
+4. **quiz-docx** - Export to Microsoft Word DOCX format
+   ```bash
+   markdown-quiz-exporter-tool quiz-docx INPUT_FILE OUTPUT_FILE [OPTIONS]
+   ```
+   - Optional: `-f, --force` - Overwrite existing file
+   - Optional: `-v, --verbose` - Verbosity level
+
+5. **completion** - Generate shell completion scripts
    ```bash
    markdown-quiz-exporter-tool completion {bash|zsh|fish}
    ```
@@ -92,6 +100,7 @@ markdown-quiz-exporter-tool/
 │   ├── quiz_html.py                 # HTML quiz generator
 │   ├── flashcard_hero.py            # Flashcard Hero TSV exporter
 │   ├── anki.py                      # Anki CSV exporter
+│   ├── docx.py                      # Word DOCX exporter
 │   └── utils.py                     # Utility functions
 ├── tests/                           # Test suite
 │   ├── __init__.py
@@ -99,6 +108,7 @@ markdown-quiz-exporter-tool/
 │   ├── test_quiz_html.py
 │   ├── test_flashcard_hero.py
 │   ├── test_anki.py
+│   ├── test_docx.py
 │   └── test_utils.py
 ├── references/                      # Format specifications
 │   ├── markdown-quiz-format.md

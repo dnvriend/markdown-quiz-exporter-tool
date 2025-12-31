@@ -5,6 +5,7 @@ description = "A CLI tool that exports the quiz-markdown-format to tools like An
 requires-python = ">=3.14"
 dependencies = [
     "click>=8.1.7",
+    "python-docx>=1.1.0",
 ]
 authors = [
     {name = "Dennis Vriend", email = "dvriend@ilionx.com"}

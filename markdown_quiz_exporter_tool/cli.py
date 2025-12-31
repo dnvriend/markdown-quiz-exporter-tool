@@ -10,6 +10,7 @@ import click
 
 from markdown_quiz_exporter_tool.anki import export_to_anki_allinone, export_to_anki_basic
 from markdown_quiz_exporter_tool.completion import completion_command
+from markdown_quiz_exporter_tool.docx import export_to_docx
 from markdown_quiz_exporter_tool.flashcard_hero import export_to_flashcard_hero
 from markdown_quiz_exporter_tool.logging_config import get_logger, setup_logging
 from markdown_quiz_exporter_tool.quiz_html import export_to_quiz_html
@@ -408,6 +409,114 @@ def quiz_html(
 
 @click.command()
 @click.argument("input_file", type=click.Path(exists=True, path_type=Path))
+@click.argument("output_file", type=click.Path(path_type=Path))
+@click.option(
+    "-v",
+    "--verbose",
+    count=True,
+    help="Enable verbose output (use -v for INFO, -vv for DEBUG, -vvv for TRACE)",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    help="Overwrite output file if it exists",
+)
+def quiz_docx(input_file: Path, output_file: Path, verbose: int, force: bool) -> None:
+    """Export quiz markdown to Microsoft Word DOCX format.
+
+    Creates a formatted Word document with numbered questions, checkbox
+    answers, and styled explanations. Supports markdown formatting
+    including bold, italic, and code blocks.
+
+    \b
+    Features:
+    - Times New Roman 12pt font
+    - Numbered questions
+    - Unicode checkboxes for answers
+    - Code blocks with monospace font and shading
+    - Italic reason sections with labels
+    - Horizontal line separators between questions
+
+    \b
+    Arguments:
+        INPUT_FILE   Path to quiz markdown file (*.md)
+        OUTPUT_FILE  Path where DOCX file will be written (*.docx)
+
+    \b
+    Examples:
+
+        \b
+        # Generate DOCX quiz
+        markdown-quiz-exporter-tool quiz-docx quiz.md quiz.docx
+
+        \b
+        # Overwrite existing file
+        markdown-quiz-exporter-tool quiz-docx quiz.md quiz.docx --force
+
+        \b
+        # With verbose output
+        markdown-quiz-exporter-tool quiz-docx quiz.md quiz.docx -vv
+    """
+    setup_logging(verbose)
+
+    logger.info("Starting DOCX quiz generation")
+    logger.debug("Input: %s, Output: %s", input_file, output_file)
+
+    # Check output file
+    if output_file.exists() and not force:
+        click.echo(
+            f"Error: Output file '{output_file}' already exists. Use --force to overwrite.",
+            err=True,
+        )
+        raise click.Abort()
+
+    # Validate input file extension
+    if input_file.suffix.lower() != ".md":
+        click.echo(
+            f"Warning: Input file '{input_file}' does not have .md extension. Continuing anyway...",
+            err=True,
+        )
+
+    # Parse quiz file
+    try:
+        logger.info("Parsing quiz file: %s", input_file)
+        questions = parse_quiz_file(input_file)
+        logger.info("Parsed %d questions", len(questions))
+    except FileNotFoundError:
+        click.echo(f"Error: Quiz file not found: {input_file}", err=True)
+        raise click.Abort()
+    except QuizParseError as e:
+        click.echo(f"Error parsing quiz file: {e}", err=True)
+        logger.debug("Parse error details", exc_info=True)
+        raise click.Abort()
+    except Exception as e:
+        click.echo(f"Unexpected error parsing quiz file: {e}", err=True)
+        logger.debug("Unexpected error details", exc_info=True)
+        raise click.Abort()
+
+    # Generate DOCX
+    try:
+        logger.info("Generating DOCX document")
+        count = export_to_docx(questions, output_file)
+        logger.info("Generated DOCX with %d questions", count)
+
+        file_size = output_file.stat().st_size
+        file_size_kb = file_size / 1024
+        click.echo(f"✓ Successfully generated {output_file} ({file_size_kb:.1f} KB)")
+        click.echo(f"  Questions: {count}")
+    except OSError as e:
+        click.echo(f"Error writing to output file: {e}", err=True)
+        logger.debug("IO error details", exc_info=True)
+        raise click.Abort()
+    except Exception as e:
+        click.echo(f"Unexpected error during DOCX generation: {e}", err=True)
+        logger.debug("Unexpected error details", exc_info=True)
+        raise click.Abort()
+
+
+@click.command()
+@click.argument("input_file", type=click.Path(exists=True, path_type=Path))
 @click.option(
     "-v",
     "--verbose",
@@ -551,6 +660,7 @@ main.add_command(completion_command)
 main.add_command(flashhero)
 main.add_command(anki)
 main.add_command(quiz_html)
+main.add_command(quiz_docx)
 main.add_command(validate)
 
 
